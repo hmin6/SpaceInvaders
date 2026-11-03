@@ -120,6 +120,10 @@ public class Spaceship : MonoBehaviour
             return;
         }
 
+        if (HitEffects.Instance != null)
+        {
+            HitEffects.Instance.PlayShipHit(transform.position);
+        }
         if (GameManager.Instance != null)
         {
             GameManager.Instance.PlayerHit();

@@ -76,7 +76,11 @@ public class AlienFleet : MonoBehaviour
         {
             spaceship = FindAnyObjectByType<Spaceship>();
         }
-        if (GameManager.Instance == null)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterAliens(startingCount);
+        }
+        else
         {
             Debug.LogWarning("No GameManager in the scene, so winning and losing won't do anything.", this);
         }
@@ -88,6 +92,10 @@ public class AlienFleet : MonoBehaviour
         if (aliens.Remove(alien))
         {
             alienCounter.SetRemaining(aliens.Count);
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.AlienDestroyed();
+            }
 
             if (aliens.Count == 0)
             {

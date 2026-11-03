@@ -40,6 +40,10 @@ public class Alien : MonoBehaviour
             return;
         }
 
+        if (HitEffects.Instance != null)
+        {
+            HitEffects.Instance.PlayAlienDestroyed(transform.position);
+        }
         fleet.RemoveAlien(this);
         Destroy(gameObject);
         Destroy(dart.gameObject);

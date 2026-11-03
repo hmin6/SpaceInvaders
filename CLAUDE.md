@@ -24,8 +24,17 @@ All gameplay scripts sit flat in `Assets/` next to their prefabs and materials. 
 - **Spaceship** reads `Keyboard.current` directly: arrow keys move it, space fires a `Dart`. It clamps its x to the camera's visible area using its measured, asymmetric mesh extents. Input is ignored when `GameManager` isn't in the Playing state. It limits how many darts are on screen at once (by tracking the darts it spawned), and after a hit it blinks and is invulnerable for a short time. `InputSystem_Actions.inputactions` exists but nothing uses it.
 - **Dart** / **AlienBullet** move by transform in `FixedUpdate` and destroy themselves once off-screen (y > 10 / y < -10). Dart has no collision handler; the Alien it hits destroys it. AlienBullet destroys itself and anything it hits except the Spaceship, which it calls `Hit()` on instead.
 - **AlienCounter** is on a TMP text object under the scene's Canvas. `AlienFleet` pushes the count to it through `SetRemaining(int)`.
+- **Game flow:** `GameManager` starts in `Title` with `Time.timeScale = 0`. Space or Enter calls `StartGame()`; this input is read in `LateUpdate` so the same key press doesn't fire a dart. On Won/Lost, R or Enter calls `Retry()`, which reloads the scene and sets the static `skipTitleOnLoad` so the reload goes straight to Playing. Awake resets `Time.timeScale`, `Lives` and `State`.
+- **NieR visual layer**, all built at runtime from code, with no prefab or scene authoring:
+  - `NierStyle` (static palette and UI-building helpers)
+  - `NierScreens` (on the Canvas; builds the start screen, end screen and hit flash, and listens to GameManager events)
+  - `NierTextStyle` (restyles existing HUD texts)
+  - `NierBackground` (on the camera; sets a solid parchment clear colour, adds a generated grid texture on a far quad, and turns off camera post-processing because the scene volume's tonemapping and vignette shift the palette)
+  - `HitEffects` (singleton; square-particle bursts configured in code, using unscaled time so they still play on the frozen end screen)
+
+  The background and effects take an optional URP `Particles/Unlit` material so the shader is included in builds. Without one they fall back to `Shader.Find`, which only reliably works in the Editor.
 - Speeds and rates are per second, scaled by `Time.fixedDeltaTime`. Tuning values are `[SerializeField] private` fields. Balance decisions and their reasoning are recorded in `CODE_ISSUES.md` under "Balance Changes"; keep that section up to date when changing defaults.
-- Enter Play Mode Options has domain reload disabled, so any `static` field must be reset in a `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]` method (see `GameManager.ResetStatics`).
+- Enter Play Mode Options has domain reload disabled, so any `static` field must be reset in a `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]` method (see `GameManager.ResetStatics` and `HitEffects.ResetStatics`). Singletons treat an existing `Instance` from a different scene as stale, because during `Retry()` the old scene's copy may still exist.
 
 ### Collision model
 
