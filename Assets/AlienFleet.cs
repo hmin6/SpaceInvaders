@@ -9,16 +9,29 @@ public class AlienFleet : MonoBehaviour
 
     public AlienCounter alienCounter;
 
-    // Used for the lose line. Found automatically if left empty.
+    // Used for the lose line and aimed shots. Found automatically if left empty.
     public Spaceship spaceship;
+
+    [Header("Formation")]
+    [SerializeField] private int columns = 10;
+    [SerializeField] private int rows = 3;
 
     [Header("Speed")]
     [Tooltip("Sideways speed in units/sec with the full fleet. Also the speed the fleet steps down at.")]
     [SerializeField] private float baseSpeed = 5f;
     [Tooltip("Speed multiplier when only one alien is left")]
-    [SerializeField] private float maxSpeedMultiplier = 6f;
+    [SerializeField] private float maxSpeedMultiplier = 5f;
     [Tooltip("1 = same speed-up per kill. Higher values save more of the speed-up for the last few aliens.")]
-    [SerializeField] private float speedUpExponent = 2f;
+    [SerializeField] private float speedUpExponent = 1.5f;
+
+    [Header("Firing")]
+    [Tooltip("Shots per second from the whole fleet with the full fleet")]
+    [SerializeField] private float baseFireRate = 1.5f;
+    [Tooltip("Shots per second from the whole fleet when only one alien is left")]
+    [SerializeField] private float maxFireRate = 3.5f;
+    [Tooltip("Chance that a shot comes from the column nearest the player instead of a random column")]
+    [Range(0, 1)]
+    [SerializeField] private float aimedShotChance = 0.35f;
 
     [Header("Lose Line")]
     [Tooltip("How far above the top of the spaceship the bottom of the lowest alien can reach before the game is lost")]
@@ -27,7 +40,12 @@ public class AlienFleet : MonoBehaviour
     private List<Alien> aliens = new List<Alien>();
     private int startingCount;
 
+    // Reused by TryFire so firing doesn't allocate
+    private Alien[] lowestInColumn;
+    private List<Alien> shooters = new List<Alien>();
+
     float speed;         // current sideways speed, units per second
+    float fireRate;      // current fleet-wide shots per second
     float direction = 1; // +1 = moving right, -1 = moving left
     float leftBound = -16;
     float rightBound = 16;
@@ -36,19 +54,21 @@ public class AlienFleet : MonoBehaviour
 
     void Start()
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < columns; i++)
         {
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < rows; j++)
             {
                 GameObject alienGO = Instantiate<GameObject>(alienPrefab);
                 alienGO.transform.position = new Vector3(2 * i - 12, 10 - 2 * j, 0);
                 Alien alien = alienGO.GetComponent<Alien>();
                 alien.fleet = this;
+                alien.Column = i;
                 aliens.Add(alien);
             }
         }
         startingCount = aliens.Count;
-        UpdateSpeed();
+        lowestInColumn = new Alien[columns];
+        UpdateDifficulty();
 
         alienCounter.SetRemaining(aliens.Count);
 
@@ -78,17 +98,18 @@ public class AlienFleet : MonoBehaviour
             }
             else
             {
-                UpdateSpeed();
+                UpdateDifficulty();
             }
         }
     }
 
-    // Like classic Space Invaders, the fleet speeds up as aliens are destroyed.
+    // Like classic Space Invaders, the fleet gets faster and fires more as aliens are destroyed.
     // t goes from 0 with the full fleet to 1 when only one alien is left.
-    void UpdateSpeed()
+    void UpdateDifficulty()
     {
         float t = startingCount > 1 ? 1f - (aliens.Count - 1) / (float)(startingCount - 1) : 1f;
         speed = baseSpeed * Mathf.Lerp(1f, maxSpeedMultiplier, Mathf.Pow(t, speedUpExponent));
+        fireRate = Mathf.Lerp(baseFireRate, maxFireRate, t);
     }
 
     void FixedUpdate()
@@ -146,6 +167,61 @@ public class AlienFleet : MonoBehaviour
             movingDown = true;
             Invoke("startSidewaysMotion", downTime);
         }
+
+        TryFire();
+    }
+
+    // The fleet fires at fireRate shots/sec on average. Only the lowest alien in each column can fire,
+    // and some shots come from the column nearest the player.
+    void TryFire()
+    {
+        if (aliens.Count == 0 || Random.value >= fireRate * Time.fixedDeltaTime)
+        {
+            return;
+        }
+
+        System.Array.Clear(lowestInColumn, 0, lowestInColumn.Length);
+        foreach (Alien alien in aliens)
+        {
+            Alien current = lowestInColumn[alien.Column];
+            if (current == null || alien.transform.position.y < current.transform.position.y)
+            {
+                lowestInColumn[alien.Column] = alien;
+            }
+        }
+
+        shooters.Clear();
+        foreach (Alien alien in lowestInColumn)
+        {
+            if (alien != null)
+            {
+                shooters.Add(alien);
+            }
+        }
+
+        Alien shooter;
+        if (spaceship != null && Random.value < aimedShotChance)
+        {
+            shooter = ClosestToX(shooters, spaceship.transform.position.x);
+        }
+        else
+        {
+            shooter = shooters[Random.Range(0, shooters.Count)];
+        }
+        shooter.Fire();
+    }
+
+    static Alien ClosestToX(List<Alien> candidates, float x)
+    {
+        Alien closest = candidates[0];
+        for (int i = 1; i < candidates.Count; i++)
+        {
+            if (Mathf.Abs(candidates[i].transform.position.x - x) < Mathf.Abs(closest.transform.position.x - x))
+            {
+                closest = candidates[i];
+            }
+        }
+        return closest;
     }
 
     void startSidewaysMotion()

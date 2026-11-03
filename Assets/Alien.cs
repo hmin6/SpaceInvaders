@@ -7,11 +7,9 @@ public class Alien : MonoBehaviour
     public GameObject bulletPrefab;
     public AlienFleet fleet;
 
-    // Chance of firing per second (was .002 per physics step at 50 steps/sec)
-    [SerializeField] private float fireChancePerSecond = .1f;
-    [SerializeField] private float shotCooldown = .1f;
+    // Formation column, set by AlienFleet so it can find the lowest alien in each column
+    public int Column { get; set; }
 
-    private float lastShot = 0;
     private float bottomOffset; // distance from this alien's position down to the bottom of its mesh
 
     // World y of the bottom of this alien, used by AlienFleet for the lose line
@@ -26,14 +24,11 @@ public class Alien : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
+    // Called by AlienFleet, which decides when and which alien fires
+    public void Fire()
     {
-        if (Random.value < fireChancePerSecond * Time.fixedDeltaTime && Time.time - lastShot > shotCooldown)
-        {
-            GameObject bullet = Instantiate<GameObject>(bulletPrefab);
-            bullet.transform.position = transform.position;
-            lastShot = Time.time;
-        }
+        GameObject bullet = Instantiate<GameObject>(bulletPrefab);
+        bullet.transform.position = transform.position;
     }
 
     void OnCollisionEnter(Collision coll)

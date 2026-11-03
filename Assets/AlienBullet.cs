@@ -4,8 +4,8 @@ public class AlienBullet : MonoBehaviour
 {
     [Header("Inscribed")]
 
-    // Units per second (was .1 per physics step at 50 steps/sec)
-    [SerializeField] private float speed = 5f;
+    // Units per second. Was 5 (.1 per physics step); raised for difficulty, see CODE_ISSUES.md
+    [SerializeField] private float speed = 9f;
 
     void FixedUpdate()
     {

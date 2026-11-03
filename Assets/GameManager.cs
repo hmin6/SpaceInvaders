@@ -17,11 +17,18 @@ public class GameManager : MonoBehaviour
     [SerializeField] private string winMessage = "YOU WIN";
     [SerializeField] private string gameOverMessage = "GAME OVER";
 
+    [Header("Lives")]
+    [SerializeField] private int startingLives = 3;
+
     public GameState State { get; private set; } = GameState.Playing;
     public bool IsPlaying => State == GameState.Playing;
+    public int Lives { get; private set; }
 
     // Raised whenever State changes, so end screens, sounds, etc. can react
     public event Action<GameState> StateChanged;
+
+    // Raised whenever Lives changes, e.g. for the lives display
+    public event Action<int> LivesChanged;
 
     // Enter Play Mode Options has domain reload disabled, so static fields keep their
     // values between play sessions unless they are reset here
@@ -41,6 +48,7 @@ public class GameManager : MonoBehaviour
         }
         Instance = this;
 
+        Lives = startingLives;
         Time.timeScale = 1;
         if (messageText != null)
         {
@@ -57,10 +65,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Called when an alien bullet hits the player. There are no lives yet, so any hit ends the game.
+    // Called by the Spaceship when an alien bullet hits it (and it isn't invulnerable).
+    // Costs a life; losing the last one ends the game.
     public void PlayerHit()
     {
-        GameOver();
+        if (!IsPlaying)
+        {
+            return;
+        }
+
+        Lives = Mathf.Max(Lives - 1, 0);
+        LivesChanged?.Invoke(Lives);
+
+        if (Lives == 0)
+        {
+            GameOver();
+        }
     }
 
     public void GameOver()
