@@ -20,7 +20,16 @@ public class AlienBullet : MonoBehaviour
 
     void OnCollisionEnter(Collision coll)
     {
+        Spaceship ship = coll.collider.GetComponentInParent<Spaceship>();
+        if (ship != null)
+        {
+            // The ship isn't destroyed here; it reports the hit and GameManager decides what happens
+            ship.Hit();
+        }
+        else
+        {
+            Destroy(coll.gameObject); // e.g. a Dart
+        }
         Destroy(gameObject);
-        Destroy(coll.gameObject);
     }
 }

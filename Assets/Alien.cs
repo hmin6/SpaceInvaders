@@ -12,6 +12,19 @@ public class Alien : MonoBehaviour
     [SerializeField] private float shotCooldown = .1f;
 
     private float lastShot = 0;
+    private float bottomOffset; // distance from this alien's position down to the bottom of its mesh
+
+    // World y of the bottom of this alien, used by AlienFleet for the lose line
+    public float BottomY => transform.position.y - bottomOffset;
+
+    void Awake()
+    {
+        Renderer rend = GetComponentInChildren<Renderer>();
+        if (rend != null)
+        {
+            bottomOffset = transform.position.y - rend.bounds.min.y;
+        }
+    }
 
     void FixedUpdate()
     {
@@ -25,8 +38,15 @@ public class Alien : MonoBehaviour
 
     void OnCollisionEnter(Collision coll)
     {
+        // Only the player's darts kill aliens (so an alien touching the ship doesn't destroy it)
+        Dart dart = coll.collider.GetComponentInParent<Dart>();
+        if (dart == null)
+        {
+            return;
+        }
+
         fleet.RemoveAlien(this);
         Destroy(gameObject);
-        Destroy(coll.gameObject);
+        Destroy(dart.gameObject);
     }
 }

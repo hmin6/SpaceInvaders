@@ -9,9 +9,26 @@ public class AlienFleet : MonoBehaviour
 
     public AlienCounter alienCounter;
 
-    private List<Alien> aliens = new List<Alien>();
+    // Used for the lose line. Found automatically if left empty.
+    public Spaceship spaceship;
 
-    float speed = 5f; // units per second (was .1 per physics step at 50 steps/sec)
+    [Header("Speed")]
+    [Tooltip("Sideways speed in units/sec with the full fleet. Also the speed the fleet steps down at.")]
+    [SerializeField] private float baseSpeed = 5f;
+    [Tooltip("Speed multiplier when only one alien is left")]
+    [SerializeField] private float maxSpeedMultiplier = 6f;
+    [Tooltip("1 = same speed-up per kill. Higher values save more of the speed-up for the last few aliens.")]
+    [SerializeField] private float speedUpExponent = 2f;
+
+    [Header("Lose Line")]
+    [Tooltip("How far above the top of the spaceship the bottom of the lowest alien can reach before the game is lost")]
+    [SerializeField] private float loseLineOffset = 0.5f;
+
+    private List<Alien> aliens = new List<Alien>();
+    private int startingCount;
+
+    float speed;         // current sideways speed, units per second
+    float direction = 1; // +1 = moving right, -1 = moving left
     float leftBound = -16;
     float rightBound = 16;
     float downTime = .1f;
@@ -30,8 +47,19 @@ public class AlienFleet : MonoBehaviour
                 aliens.Add(alien);
             }
         }
+        startingCount = aliens.Count;
+        UpdateSpeed();
 
         alienCounter.SetRemaining(aliens.Count);
+
+        if (spaceship == null)
+        {
+            spaceship = FindAnyObjectByType<Spaceship>();
+        }
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("No GameManager in the scene, so winning and losing won't do anything.", this);
+        }
     }
 
     public void RemoveAlien(Alien alien)
@@ -40,12 +68,34 @@ public class AlienFleet : MonoBehaviour
         if (aliens.Remove(alien))
         {
             alienCounter.SetRemaining(aliens.Count);
+
+            if (aliens.Count == 0)
+            {
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.Win();
+                }
+            }
+            else
+            {
+                UpdateSpeed();
+            }
         }
+    }
+
+    // Like classic Space Invaders, the fleet speeds up as aliens are destroyed.
+    // t goes from 0 with the full fleet to 1 when only one alien is left.
+    void UpdateSpeed()
+    {
+        float t = startingCount > 1 ? 1f - (aliens.Count - 1) / (float)(startingCount - 1) : 1f;
+        speed = baseSpeed * Mathf.Lerp(1f, maxSpeedMultiplier, Mathf.Pow(t, speedUpExponent));
     }
 
     void FixedUpdate()
     {
-        float step = speed * Time.fixedDeltaTime;
+        float sideStep = direction * speed * Time.fixedDeltaTime;
+        // Step down at the base speed so each drop is the same distance however fast the fleet is going
+        float downStep = baseSpeed * Time.fixedDeltaTime;
 
         //move all aliens
         foreach (Alien alien in aliens)
@@ -53,17 +103,18 @@ public class AlienFleet : MonoBehaviour
             Vector3 position = alien.transform.position;
             if (!movingDown)
             {
-                position.x += step;
+                position.x += sideStep;
             }
             else
             {
-                position.y += -Mathf.Abs(step);
+                position.y -= downStep;
             }
             alien.transform.position = position;
         }
 
-        //change alien direction
+        //find the fleet's edges and lowest point
         float left = 0, right = 0;
+        float lowest = float.MaxValue;
         foreach (Alien alien in aliens)
         {
             Vector3 position = alien.transform.position;
@@ -75,10 +126,23 @@ public class AlienFleet : MonoBehaviour
             {
                 left = position.x;
             }
+            lowest = Mathf.Min(lowest, alien.BottomY);
         }
-        if (speed > 0 && right >= rightBound || speed < 0 && left <= leftBound)
+
+        //lose if the aliens get down to the spaceship
+        if (spaceship != null && lowest <= spaceship.TopY + loseLineOffset)
         {
-            speed = -speed;
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.GameOver();
+            }
+            return;
+        }
+
+        //change alien direction
+        if (direction > 0 && right >= rightBound || direction < 0 && left <= leftBound)
+        {
+            direction = -direction;
             movingDown = true;
             Invoke("startSidewaysMotion", downTime);
         }
