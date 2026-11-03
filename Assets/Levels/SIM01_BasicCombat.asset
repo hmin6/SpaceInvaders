@@ -26,20 +26,36 @@ MonoBehaviour:
   alienBulletSpeed: 9
   darkBulletChance: 0
   briefingSystemLine: 'Proposal: Unit No. 11S proceed to combat simulation 01.'
-  briefing: 'Good morning, 11S. This is Operator 17O.
-
-    Targets are machine lifeforms rebuilt from archive data.
-
-    Your Pod is online. Destroy enough targets to charge its laser.
-
-    ...The Commander reads these logs, so no pressure.'
+  briefingDialogue:
+  - speaker: 0
+    text: Good morning, 11S. I'm Operator 17O. I'll be monitoring your certification.
+  - speaker: 0
+    text: Your targets are machine lifeforms, reconstructed from archived combat data.
+  - speaker: 1
+    text: 'Report: Pod 217 online. Assigned to support Unit 11S.'
+  - speaker: 1
+    text: 'Proposal: Destroy targets to charge Pod Program: Laser.'
+  - speaker: 0
+    text: The Commander reads these logs, so no pressure.
   debriefSystemLine: 'Analysis: Simulation 01 cleared. Combat parameters within tolerance.'
-  debrief: 'Nice work, 11S. Your reaction time is above the unit average.
-
-    ...I wasn''t supposed to tell you that.
-
-    Proceed to the next simulation.'
+  debriefDialogue:
+  - speaker: 0
+    text: Nice work, 11S. Your reaction time is above the unit average.
+  - speaker: 0
+    text: ...I wasn't supposed to tell you that.
+  - speaker: 1
+    text: 'Report: Operator 17O has disclosed restricted evaluation data. Logging.'
+  - speaker: 0
+    text: ...Pod, you don't have to log everything.
+  - speaker: 1
+    text: 'Correction: Pod 217 is required to log everything.'
   failureTitle: 
   failureSystemLine: 
-  failureMessage: 
+  failureDialogue:
+  - speaker: 0
+    text: Don't worry. Nobody passes on the first try.
+  - speaker: 0
+    text: ...Almost nobody.
+  - speaker: 1
+    text: 'Proposal: Retry.'
   failureMenuLabel: 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
@@ -6,7 +7,8 @@ using TMPro;
 // Builds every NieR-styled screen at runtime as children of this Canvas: title, briefing,
 // debrief / failure / certification results, the epilogue, the HUD level label and the hit flash.
 // Shows them based on GameManager's state and handles their key presses.
-// Level-specific text lives in LevelData assets; everything else is in the Inspector fields below.
+// Level-specific conversations live in LevelData assets (certification in GameManager);
+// everything else is in the Inspector fields below.
 [RequireComponent(typeof(Canvas))]
 public class NierScreens : MonoBehaviour
 {
@@ -23,12 +25,16 @@ public class NierScreens : MonoBehaviour
 
     [Header("Story")]
     [SerializeField] private string operatorName = "Operator 17O";
+    [Tooltip("Used only if there's no Pod in the scene; otherwise the Pod's own Designation is shown")]
+    [SerializeField] private string podName = "POD 217";
     [Tooltip("Typewriter speed in characters per second")]
     [SerializeField] private float typingSpeed = 45f;
     [Tooltip("Seconds after a screen appears before key presses count, so a held fire key can't skip it")]
     [SerializeField] private float inputDelay = .4f;
     [SerializeField] private string skipHint = "Press any key to skip";
     [SerializeField] private string confirmHint = "Press Space or Enter";
+    [Tooltip("Shown when a conversation continues on another page")]
+    [SerializeField] private string nextHint = "Press Space or Enter : Next";
 
     [Header("Briefing")]
     [SerializeField] private string briefingTag = "Briefing";
@@ -45,8 +51,12 @@ public class NierScreens : MonoBehaviour
     [Header("Failure (defaults; each LevelData can override)")]
     [SerializeField] private string failedTitle = "Simulation Failed";
     [SerializeField] private string failedSystemLine = "Unit will be recalibrated.";
-    [TextArea(2, 4)]
-    [SerializeField] private string failedOperatorMessage = "Don't worry. Nobody passes on the first try.\n...Almost nobody.";
+    [SerializeField] private List<DialogueLine> failedDialogue = new List<DialogueLine>
+    {
+        DialogueLine.Operator("Don't worry. Nobody passes on the first try."),
+        DialogueLine.Operator("...Almost nobody."),
+        DialogueLine.Pod("Proposal: Retry."),
+    };
     [SerializeField] private string retryLabel = "[ Retry ]";
     [SerializeField] private string retryHint = "Press R or Enter";
 
@@ -57,11 +67,28 @@ public class NierScreens : MonoBehaviour
     [SerializeField] private string retriesLabel = "Retries";
 
     [Header("Epilogue")]
-    [TextArea(2, 4)]
-    [SerializeField] private string epilogueText = "Combat data uploaded to Bunker server.\nMemory backup complete.";
+    [SerializeField] private string[] epilogueSystemLines =
+    {
+        "Combat data uploaded to Bunker server.",
+        "Memory backup complete.",
+    };
+    [Tooltip("Shown after the system lines, each prefixed with the Pod's designation in orange")]
+    [SerializeField] private string[] epiloguePodLines =
+    {
+        "Backup confirmed.",
+        "...See you again, 11S.",
+    };
     [SerializeField] private float epilogueBlackFade = 1f;
+    [Tooltip("Seconds of black before the first line")]
     [SerializeField] private float epiloguePause = 2f;
+    [Tooltip("Seconds each line takes to fade in")]
     [SerializeField] private float epilogueTextFade = 2.5f;
+    [Tooltip("Seconds between system lines")]
+    [SerializeField] private float epilogueLineGap = 1.5f;
+    [Tooltip("Seconds between the last system line and the first Pod line")]
+    [SerializeField] private float epiloguePodPause = 3.5f;
+    [Tooltip("Seconds between Pod lines")]
+    [SerializeField] private float epiloguePodGap = 2.5f;
 
     [Header("Anomaly Glitch (failure title on anomaly levels)")]
     [SerializeField] private float glitchDuration = 1f;
@@ -77,8 +104,8 @@ public class NierScreens : MonoBehaviour
     private static readonly Vector2 Center = new Vector2(.5f, .5f);
 
     // Result panel title and its underline (ShowResult moves them sideways when there's a rank badge)
-    private const float ResultTitleY = 310;
-    private const float ResultTitleBarY = 262;
+    private const float ResultTitleY = 370;
+    private const float ResultTitleBarY = 322;
 
     private GameManager gameManager;
     private float stateEnteredTime;
@@ -95,7 +122,7 @@ public class NierScreens : MonoBehaviour
     private TextMeshProUGUI briefingHeader;
     private Image briefingHeaderSquare;
     private TextMeshProUGUI briefingSystem;
-    private TypewriterText briefingBody;
+    private DialogueView briefingDialogue;
     private GameObject briefingMenu;
     private Image briefingMarker;
     private TextMeshProUGUI briefingHint;
@@ -112,8 +139,7 @@ public class NierScreens : MonoBehaviour
     private readonly TextMeshProUGUI[] statValues = new TextMeshProUGUI[StatRowCount];
     private GameObject rankBadge;
     private TextMeshProUGUI rankLetter;
-    private TextMeshProUGUI resultSpeaker;
-    private TypewriterText resultMessage;
+    private DialogueView resultDialogue;
     private GameObject resultMenu;
     private TextMeshProUGUI resultMenuLabel;
     private Image resultMarker;
@@ -123,7 +149,7 @@ public class NierScreens : MonoBehaviour
     // Epilogue
     private GameObject epilogueScreen;
     private Image epilogueBlack;
-    private TextMeshProUGUI epilogueLabel;
+    private TextMeshProUGUI[] epilogueLines;
     private Image epilogueMarker;
 
     // Hit flash
@@ -164,6 +190,17 @@ public class NierScreens : MonoBehaviour
             Debug.LogWarning("NierScreens: no GameManager in the scene.", this);
             return;
         }
+        Pod pod = FindAnyObjectByType<Pod>();
+        if (pod != null)
+        {
+            podName = pod.Designation;
+        }
+        foreach (DialogueView view in new[] { briefingDialogue, resultDialogue })
+        {
+            view.SetNames(operatorName, podName);
+            view.TypingSpeed = typingSpeed;
+        }
+
         gameManager.StateChanged += OnStateChanged;
         gameManager.LivesChanged += OnLivesChanged;
         OnStateChanged(gameManager.State);
@@ -206,21 +243,19 @@ public class NierScreens : MonoBehaviour
             case GameManager.GameState.Debrief:
                 ShowOnly(resultScreen);
                 ShowResult(level, debriefTitle, level != null ? level.DebriefSystemLine : "",
-                    level != null ? level.Debrief : "", continueLabel, confirmHint, NierStyle.Ink);
+                    level != null ? level.DebriefDialogue : null, continueLabel, confirmHint, NierStyle.Ink);
                 SetStatRow(0, killsLabel, gameManager.AliensDestroyed + " / " + gameManager.TotalAliens);
                 SetStatRow(1, livesLabel, gameManager.Lives.ToString());
                 SetStatRow(2, repairedText, "");
                 break;
 
             case GameManager.GameState.Won:
-                // Run-wide stats and a rank; the Operator's message depends on the rank
+                // Run-wide stats and a rank; the conversation depends on the rank
                 GameManager.CertificationRank rank = gameManager.GetCertificationRank();
-                string certificationMessage = rank != null && !string.IsNullOrEmpty(rank.operatorMessage)
-                    ? rank.operatorMessage
-                    : (level != null ? level.Debrief : "");
                 ShowOnly(resultScreen);
                 ShowResult(level, certifiedTitle, level != null ? level.DebriefSystemLine : "",
-                    certificationMessage, continueLabel, confirmHint, NierStyle.Ink, rank != null ? rank.rank : null);
+                    PickDialogue(gameManager.GetCertificationDialogue(rank), level != null ? level.DebriefDialogue : null),
+                    continueLabel, confirmHint, NierStyle.Ink, rank != null ? rank.rank : null);
                 SetStatRow(0, totalKillsLabel, gameManager.RunTargetsDestroyed.ToString());
                 SetStatRow(1, livesLostLabel, gameManager.RunLivesLost.ToString());
                 SetStatRow(2, retriesLabel, gameManager.RunRetries.ToString());
@@ -232,7 +267,7 @@ public class NierScreens : MonoBehaviour
                 ShowOnly(resultScreen);
                 ShowResult(level, title,
                     Pick(level != null ? level.FailureSystemLine : null, failedSystemLine),
-                    Pick(level != null ? level.FailureMessage : null, failedOperatorMessage),
+                    PickDialogue(level != null ? level.FailureDialogue : null, failedDialogue),
                     Pick(level != null ? level.FailureMenuLabel : null, retryLabel),
                     retryHint, NierStyle.Accent);
                 SetStatRow(0, killsLabel, gameManager.AliensDestroyed + " / " + gameManager.TotalAliens);
@@ -248,7 +283,6 @@ public class NierScreens : MonoBehaviour
                 // Keep the certification panel underneath so the black fades in over it
                 ShowOnly(epilogueScreen);
                 resultScreen.SetActive(true);
-                epilogueLabel.text = epilogueText;
                 UpdateEpilogue();
                 break;
 
@@ -275,12 +309,11 @@ public class NierScreens : MonoBehaviour
         briefingSystem.color = anomaly ? NierStyle.Accent : NierStyle.Ink;
         briefingHeaderSquare.color = anomaly ? NierStyle.Accent : NierStyle.Background;
 
-        briefingBody.CharactersPerSecond = typingSpeed;
-        briefingBody.Play(level != null ? level.Briefing : "");
+        briefingDialogue.Show(level != null ? level.BriefingDialogue : null);
     }
 
     // Stat rows are filled in separately with SetStatRow. rank = null hides the rank badge.
-    void ShowResult(LevelData level, string title, string systemLine, string message,
+    void ShowResult(LevelData level, string title, string systemLine, IReadOnlyList<DialogueLine> dialogue,
         string menuLabel, string hint, Color barColor, string rank = null)
     {
         resultHeader.text = level != null ? level.LevelName : "";
@@ -300,10 +333,7 @@ public class NierScreens : MonoBehaviour
         resultTitle.rectTransform.sizeDelta = new Vector2(hasRank ? 720 : 940, 84);
         resultBar.rectTransform.anchoredPosition = new Vector2(titleX, ResultTitleBarY);
 
-        bool hasMessage = !string.IsNullOrEmpty(message);
-        resultSpeaker.gameObject.SetActive(hasMessage);
-        resultMessage.CharactersPerSecond = typingSpeed;
-        resultMessage.Play(hasMessage ? message : "");
+        resultDialogue.Show(dialogue);
 
         resultMenuLabel.text = menuLabel;
         resultConfirmHint = hint;
@@ -322,6 +352,11 @@ public class NierScreens : MonoBehaviour
     static string Pick(string preferred, string fallback)
     {
         return string.IsNullOrEmpty(preferred) ? fallback : preferred;
+    }
+
+    static IReadOnlyList<DialogueLine> PickDialogue(IReadOnlyList<DialogueLine> preferred, IReadOnlyList<DialogueLine> fallback)
+    {
+        return preferred != null && preferred.Count > 0 ? preferred : fallback;
     }
 
     // ---------- Glitch ----------
@@ -396,14 +431,8 @@ public class NierScreens : MonoBehaviour
         briefingMarker.enabled = markerOn;
         resultMarker.enabled = markerOn;
 
-        // Menu items appear once the typewriter has finished
-        bool briefingDone = briefingBody.IsComplete;
-        briefingMenu.SetActive(briefingDone);
-        briefingHint.text = briefingDone ? confirmHint : skipHint;
-
-        bool resultDone = resultMessage.IsComplete;
-        resultMenu.SetActive(resultDone);
-        resultHint.text = resultDone ? resultConfirmHint : skipHint;
+        UpdateDialogueControls(briefingDialogue, briefingMenu, briefingHint, confirmHint);
+        UpdateDialogueControls(resultDialogue, resultMenu, resultHint, resultConfirmHint);
 
         if (epilogueScreen.activeSelf)
         {
@@ -420,20 +449,79 @@ public class NierScreens : MonoBehaviour
         }
     }
 
-    // Black fades in, then a pause, then the quiet text fades in
+    // The menu item appears once the whole conversation has been shown; until then the hint says
+    // whether a key skips the typing or turns the page
+    void UpdateDialogueControls(DialogueView view, GameObject menu, TextMeshProUGUI hint, string finishedHint)
+    {
+        menu.SetActive(view.IsFinished);
+        hint.text = !view.IsPageComplete ? skipHint : view.HasNextPage ? nextHint : finishedHint;
+    }
+
+    // Black fades in, then after a pause the system lines fade in one by one, then after a longer
+    // pause the Pod's lines (with its designation in orange)
     void UpdateEpilogue()
     {
         float t = Time.unscaledTime - stateEnteredTime;
         epilogueBlack.color = NierStyle.WithAlpha(Color.black, Mathf.Clamp01(t / epilogueBlackFade));
 
-        float textAlpha = Mathf.Clamp01((t - epilogueBlackFade - epiloguePause) / epilogueTextFade);
-        epilogueLabel.color = NierStyle.WithAlpha(NierStyle.BackgroundDark, textAlpha * .8f);
+        string accent = ColorUtility.ToHtmlStringRGB(NierStyle.Accent);
+        for (int i = 0; i < epilogueLines.Length; i++)
+        {
+            float alpha = Mathf.Clamp01((t - EpilogueLineStart(i)) / epilogueTextFade);
+            epilogueLines[i].color = NierStyle.WithAlpha(NierStyle.BackgroundDark, alpha * .8f);
+            if (i >= epilogueSystemLines.Length)
+            {
+                // The label's color tag needs its own alpha to fade with the line
+                string labelAlpha = Mathf.RoundToInt(alpha * 255).ToString("X2");
+                epilogueLines[i].text = "<color=#" + accent + labelAlpha + ">" + podName + ":</color> "
+                    + epiloguePodLines[i - epilogueSystemLines.Length];
+            }
+        }
         epilogueMarker.enabled = EpilogueReady() && Time.unscaledTime % 1.4f < .7f;
+    }
+
+    // Seconds after the epilogue starts that line i (system lines first, then Pod lines) begins fading in
+    float EpilogueLineStart(int i)
+    {
+        float firstLine = epilogueBlackFade + epiloguePause;
+        if (i < epilogueSystemLines.Length)
+        {
+            return firstLine + i * epilogueLineGap;
+        }
+        float lastSystemLine = firstLine + Mathf.Max(0, epilogueSystemLines.Length - 1) * epilogueLineGap;
+        return lastSystemLine + epiloguePodPause + (i - epilogueSystemLines.Length) * epiloguePodGap;
     }
 
     bool EpilogueReady()
     {
-        return Time.unscaledTime - stateEnteredTime >= epilogueBlackFade + epiloguePause + epilogueTextFade;
+        float end = epilogueLines.Length > 0
+            ? EpilogueLineStart(epilogueLines.Length - 1) + epilogueTextFade
+            : epilogueBlackFade;
+        return Time.unscaledTime - stateEnteredTime >= end;
+    }
+
+    // Any key finishes the page's typing; Space/Enter then turns the page, or returns true
+    // (move on) on the last one
+    static bool AdvanceDialogue(DialogueView view, bool anyKey, bool confirm)
+    {
+        if (!view.IsPageComplete)
+        {
+            if (anyKey)
+            {
+                view.CompletePage();
+            }
+            return false;
+        }
+        if (!confirm)
+        {
+            return false;
+        }
+        if (view.HasNextPage)
+        {
+            view.NextPage();
+            return false;
+        }
+        return true;
     }
 
     // LateUpdate, after Spaceship.Update, so the key that starts a level doesn't also fire a dart
@@ -459,14 +547,7 @@ public class NierScreens : MonoBehaviour
                 break;
 
             case GameManager.GameState.Briefing:
-                if (!briefingBody.IsComplete)
-                {
-                    if (anyKey)
-                    {
-                        briefingBody.Complete();
-                    }
-                }
-                else if (confirm)
+                if (AdvanceDialogue(briefingDialogue, anyKey, confirm))
                 {
                     gameManager.BeginLevel();
                 }
@@ -475,14 +556,8 @@ public class NierScreens : MonoBehaviour
             case GameManager.GameState.Debrief:
             case GameManager.GameState.Won:
             case GameManager.GameState.Lost:
-                if (!resultMessage.IsComplete)
-                {
-                    if (anyKey)
-                    {
-                        resultMessage.Complete();
-                    }
-                }
-                else if (confirm || (gameManager.State == GameManager.GameState.Lost && keyboard.rKey.wasPressedThisFrame))
+                bool proceed = confirm || (gameManager.State == GameManager.GameState.Lost && keyboard.rKey.wasPressedThisFrame);
+                if (AdvanceDialogue(resultDialogue, anyKey, proceed))
                 {
                     if (gameManager.State == GameManager.GameState.Debrief)
                     {
@@ -561,33 +636,29 @@ public class NierScreens : MonoBehaviour
         NierStyle.Stretch(dim.rectTransform);
         briefingScreen = dim.gameObject;
 
-        // Panel is 660 tall: y runs from +330 (top) to -330 (bottom)
-        Image panel = CreatePanel(dim.transform, new Vector2(1100, 660));
+        // Panel is 760 tall: y runs from +380 (top) to -380 (bottom)
+        Image panel = CreatePanel(dim.transform, new Vector2(1100, 760));
         CreateHeader(panel.transform, out briefingHeader, out briefingHeaderSquare, briefingTag);
 
         briefingSystem = NierStyle.CreateText("SystemLine", panel.transform, "", 24, NierStyle.Ink,
             TextAlignmentOptions.Left, font, 6);
-        NierStyle.Place(briefingSystem.rectTransform, Center, new Vector2(0, 238), new Vector2(1000, 40));
+        NierStyle.Place(briefingSystem.rectTransform, Center, new Vector2(0, 288), new Vector2(1000, 40));
 
-        CreateLine(panel.transform, new Vector2(0, 206), 960);
+        CreateLine(panel.transform, new Vector2(0, 256), 960);
 
-        TextMeshProUGUI speaker = NierStyle.CreateText("Speaker", panel.transform, operatorName, 22, NierStyle.Ink,
-            TextAlignmentOptions.Left, font, 8);
-        NierStyle.Place(speaker.rectTransform, Center, new Vector2(0, 176), new Vector2(1000, 34));
+        // About six one-line entries per page; longer conversations page with Space
+        briefingDialogue = DialogueView.Create(panel.transform, new Vector2(0, 21), new Vector2(1000, 430), 24, font);
 
-        // Room for about seven lines (each "..." pause starts a new line)
-        briefingBody = CreateMessage(panel.transform, new Vector2(0, 8), new Vector2(1000, 300), 28);
-
-        CreateLine(panel.transform, new Vector2(0, -158), 960);
+        CreateLine(panel.transform, new Vector2(0, -214), 960);
 
         RectTransform menu = NierStyle.CreateRect("Menu", panel.transform);
         NierStyle.Stretch(menu);
         briefingMenu = menu.gameObject;
-        briefingMarker = NierStyle.CreateMenuItem(menu, beginLabel, new Vector2(0, -218), font);
+        briefingMarker = NierStyle.CreateMenuItem(menu, beginLabel, new Vector2(0, -274), font);
 
         briefingHint = NierStyle.CreateText("Hint", panel.transform, "", 22, NierStyle.Ink,
             TextAlignmentOptions.Center, font);
-        NierStyle.Place(briefingHint.rectTransform, Center, new Vector2(0, -285), new Vector2(900, 36));
+        NierStyle.Place(briefingHint.rectTransform, Center, new Vector2(0, -340), new Vector2(900, 36));
     }
 
     void BuildResultScreen(Transform root)
@@ -596,8 +667,8 @@ public class NierScreens : MonoBehaviour
         NierStyle.Stretch(dim.rectTransform);
         resultScreen = dim.gameObject;
 
-        // Panel is 840 tall: y runs from +420 (top) to -420 (bottom)
-        Image panel = CreatePanel(dim.transform, new Vector2(1000, 840));
+        // Panel is 960 tall: y runs from +480 (top) to -480 (bottom)
+        Image panel = CreatePanel(dim.transform, new Vector2(1000, 960));
         CreateHeader(panel.transform, out resultHeader, out resultHeaderSquare, "Result");
 
         resultTitle = NierStyle.CreateText("Title", panel.transform, "", 60, NierStyle.InkDark,
@@ -614,7 +685,7 @@ public class NierScreens : MonoBehaviour
 
         // Certification rank: a dark square with the letter, to the right of the title
         Image badge = NierStyle.CreateImage("RankBadge", panel.transform, NierStyle.InkDark);
-        NierStyle.Place(badge.rectTransform, Center, new Vector2(400, 300), new Vector2(100, 100));
+        NierStyle.Place(badge.rectTransform, Center, new Vector2(400, 360), new Vector2(100, 100));
         rankLetter = NierStyle.CreateText("Rank", badge.transform, "", 72, NierStyle.Background,
             TextAlignmentOptions.Center, font, 0);
         NierStyle.Stretch(rankLetter.rectTransform);
@@ -623,30 +694,26 @@ public class NierScreens : MonoBehaviour
 
         resultSystem = NierStyle.CreateText("SystemLine", panel.transform, "", 22, NierStyle.Ink,
             TextAlignmentOptions.Center, font, 6);
-        NierStyle.Place(resultSystem.rectTransform, Center, new Vector2(0, 222), new Vector2(940, 36));
+        NierStyle.Place(resultSystem.rectTransform, Center, new Vector2(0, 282), new Vector2(940, 36));
 
-        CreateLine(panel.transform, new Vector2(0, 192), 840);
+        CreateLine(panel.transform, new Vector2(0, 252), 840);
         for (int i = 0; i < StatRowCount; i++)
         {
-            CreateStatRow(panel.transform, 157 - i * 42, out statLabels[i], out statValues[i]);
+            CreateStatRow(panel.transform, 217 - i * 42, out statLabels[i], out statValues[i]);
         }
-        CreateLine(panel.transform, new Vector2(0, 32), 840);
+        CreateLine(panel.transform, new Vector2(0, 92), 840);
 
-        resultSpeaker = NierStyle.CreateText("Speaker", panel.transform, operatorName, 20, NierStyle.Ink,
-            TextAlignmentOptions.Left, font, 8);
-        NierStyle.Place(resultSpeaker.rectTransform, Center, new Vector2(0, 6), new Vector2(840, 30));
-
-        // Room for about eight lines (the rank messages are seven) between the speaker label and the menu item
-        resultMessage = CreateMessage(panel.transform, new Vector2(0, -145), new Vector2(840, 250), 22);
+        // About six one-line entries per page; longer conversations page with Space
+        resultDialogue = DialogueView.Create(panel.transform, new Vector2(0, -139), new Vector2(840, 422), 22, font);
 
         RectTransform menu = NierStyle.CreateRect("Menu", panel.transform);
         NierStyle.Stretch(menu);
         resultMenu = menu.gameObject;
-        resultMarker = NierStyle.CreateMenuItem(menu, continueLabel, new Vector2(0, -315), font, out resultMenuLabel);
+        resultMarker = NierStyle.CreateMenuItem(menu, continueLabel, new Vector2(0, -395), font, out resultMenuLabel);
 
         resultHint = NierStyle.CreateText("Hint", panel.transform, "", 22, NierStyle.Ink,
             TextAlignmentOptions.Center, font);
-        NierStyle.Place(resultHint.rectTransform, Center, new Vector2(0, -385), new Vector2(800, 36));
+        NierStyle.Place(resultHint.rectTransform, Center, new Vector2(0, -450), new Vector2(800, 36));
     }
 
     void BuildEpilogueScreen(Transform root)
@@ -655,10 +722,25 @@ public class NierScreens : MonoBehaviour
         NierStyle.Stretch(epilogueBlack.rectTransform);
         epilogueScreen = epilogueBlack.gameObject;
 
-        epilogueLabel = NierStyle.CreateText("Text", epilogueBlack.transform, "", 24, NierStyle.BackgroundDark,
-            TextAlignmentOptions.Center, font, 6, false);
-        epilogueLabel.lineSpacing = 30;
-        NierStyle.Place(epilogueLabel.rectTransform, Center, Vector2.zero, new Vector2(1200, 120));
+        // System lines, a gap, then the Pod's lines, centred as one block
+        const float lineHeight = 44f;
+        const float groupGap = 40f;
+        int count = epilogueSystemLines.Length + epiloguePodLines.Length;
+        float blockHeight = count * lineHeight + (epiloguePodLines.Length > 0 ? groupGap : 0);
+        float y = blockHeight / 2 - lineHeight / 2;
+        epilogueLines = new TextMeshProUGUI[count];
+        for (int i = 0; i < count; i++)
+        {
+            if (i == epilogueSystemLines.Length && i > 0)
+            {
+                y -= groupGap;
+            }
+            string content = i < epilogueSystemLines.Length ? epilogueSystemLines[i] : "";
+            epilogueLines[i] = NierStyle.CreateText("Line", epilogueBlack.transform, content, 24, NierStyle.BackgroundDark,
+                TextAlignmentOptions.Center, font, 6, false);
+            NierStyle.Place(epilogueLines[i].rectTransform, Center, new Vector2(0, y), new Vector2(1400, lineHeight));
+            y -= lineHeight;
+        }
 
         epilogueMarker = NierStyle.CreateImage("Marker", epilogueBlack.transform,
             NierStyle.WithAlpha(NierStyle.BackgroundDark, .5f));
@@ -697,17 +779,6 @@ public class NierScreens : MonoBehaviour
 
         square = NierStyle.CreateImage("Square", bar.transform, NierStyle.Background);
         NierStyle.Place(square.rectTransform, new Vector2(1, .5f), new Vector2(-30, 0), new Vector2(14, 14));
-    }
-
-    // Wrapped, sentence-case dialogue text with a typewriter
-    TypewriterText CreateMessage(Transform parent, Vector2 position, Vector2 size, float fontSize)
-    {
-        TextMeshProUGUI text = NierStyle.CreateText("Message", parent, "", fontSize, NierStyle.InkDark,
-            TextAlignmentOptions.TopLeft, font, 2, false);
-        text.textWrappingMode = TextWrappingModes.Normal;
-        text.lineSpacing = 12;
-        NierStyle.Place(text.rectTransform, Center, position, size);
-        return text.gameObject.AddComponent<TypewriterText>();
     }
 
     // Label on the left, value on the right; both filled in later by SetStatRow

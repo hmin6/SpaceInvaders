@@ -52,6 +52,13 @@ All gameplay scripts sit flat in `Assets/` next to their prefabs and materials. 
   - **Ship:** the original capsule colliders are disabled, and the root MeshCollider gets a convex arrowhead mesh. Extents for the clamp and lose line come from the model's renderers.
   - **Aliens:** the shape depends on row % 3. `AlienVisual` handles the bob and the anomaly glitch, and moves only the model, never the alien.
   - **Shots:** each level sets a `DarkBulletChance`. Dark shots destroy darts and survive, orange shots die with the dart, and alien shots pass through each other.
+- **Dialogue:** conversations are `List<DialogueLine>` entries (speaker Operator/Pod, plus text).
+  - **Where they're stored:** LevelData holds the briefing, debrief and failure conversations. GameManager builds the certification conversation from the rank's `operatorMessage` and `podLine` plus a shared `certificationClosing`. Its component menu has **Reset Certification Dialogue**, because the scene keeps its own saved copy.
+  - **Display:** `DialogueView` (created by NierScreens) shows a speaker label per line, the Pod's in orange. It types the lines one after another and splits them into pages to fit its area. Any key completes the page; Space/Enter turns the page or proceeds.
+- **Pod voice:** every Pod line starts with a tag ("Report:", "Analysis:", "Proposal:", "Query:", "Alert:", "Correction:", "Negative.", "Affirmative."). Its tone is flat and literal. The designation is `Pod.Designation`, default "POD 217".
+- **PodChatter:** on the Canvas. It shows in-play Pod commentary in a box above the Pod meter.
+  - **Rules:** a global cooldown, where a higher priority can interrupt; random variants with no immediate repeats; anomaly remarks on anomaly levels.
+  - **Event sources:** `GameManager` (StateChanged, LivesChanged), `Pod` (Ready, LaserFinished(kills)) and `AlienFleet` (AliensRemainingChanged, BulletFired(dark), SpeedMultiplier).
 - **Story:** a NieR: Automata prequel with original characters only: the player is YoRHa No. 11 Type S, guided by Operator 17O. Don't use canon characters. Dialogue lives in the LevelData assets and the NierScreens Inspector fields.
 - **NieR visual layer**, all built at runtime from code, with no prefab or scene authoring:
   - `NierStyle` (static palette and UI-building helpers)

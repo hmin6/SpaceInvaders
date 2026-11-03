@@ -26,18 +26,36 @@ MonoBehaviour:
   alienBulletSpeed: 10
   darkBulletChance: 0.2
   briefingSystemLine: 'ALERT: Enemy aggression parameters increased.'
-  briefing: 'Simulation 02 raises enemy speed and rate of fire.
-
-    This combat data was recorded before you were activated.
-
-    Keep moving. Don''t let them pin you down.'
+  briefingDialogue:
+  - speaker: 0
+    text: This simulation uses combat data recorded on the surface.
+  - speaker: 0
+    text: It was recorded before you were activated.
+  - speaker: 1
+    text: 'Query: Current status of the unit that recorded this data?'
+  - speaker: 0
+    text: ...That's not relevant to your certification.
+  - speaker: 0
+    text: Stay focused, 11S.
   debriefSystemLine: 'Analysis: Simulation 02 cleared. Adaptation rate: high.'
-  debrief: 'You''re adapting faster than the model predicted.
-
-    One simulation left. Then you''re cleared for deployment.
-
-    Earth is... well. You''ll see it soon.'
+  debriefDialogue:
+  - speaker: 0
+    text: Good work, 11S. Next stop is the surface.
+  - speaker: 0
+    text: Earth is... well. You'll see it soon.
+  - speaker: 1
+    text: 'Query: Should Unit 11S be informed of current surface conditions?'
+  - speaker: 0
+    text: Not yet.
+  - speaker: 1
+    text: 'Report: Request noted.'
   failureTitle: 
   failureSystemLine: 
-  failureMessage: 
+  failureDialogue:
+  - speaker: 0
+    text: Don't worry. Nobody passes on the first try.
+  - speaker: 0
+    text: ...Almost nobody.
+  - speaker: 1
+    text: 'Proposal: Retry.'
   failureMenuLabel: 

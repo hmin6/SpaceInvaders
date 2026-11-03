@@ -26,6 +26,17 @@ public static class LevelDataDefaults
         }
     }
 
+    static DialogueLine Op(string text) => DialogueLine.Operator(text);
+    static DialogueLine Pod(string text) => DialogueLine.Pod(text);
+
+    // Failure conversation shared by SIM 01 and SIM 02
+    static DialogueLine[] StandardFailure() => new[]
+    {
+        Op("Don't worry. Nobody passes on the first try."),
+        Op("...Almost nobody."),
+        Pod("Proposal: Retry."),
+    };
+
     static void Build(bool overwrite)
     {
         if (!AssetDatabase.IsValidFolder(Folder))
@@ -41,16 +52,24 @@ public static class LevelDataDefaults
             baseFireRate: 1.5f, maxFireRate: 3.5f, aimedShotChance: .35f, alienBulletSpeed: 9f,
             darkBulletChance: 0f,
             briefingSystemLine: "Proposal: Unit No. 11S proceed to combat simulation 01.",
-            briefing:
-                "Good morning, 11S. This is Operator 17O.\n" +
-                "Targets are machine lifeforms rebuilt from archive data.\n" +
-                "Your Pod is online. Destroy enough targets to charge its laser.\n" +
-                "...The Commander reads these logs, so no pressure.",
+            briefing: new[]
+            {
+                Op("Good morning, 11S. I'm Operator 17O. I'll be monitoring your certification."),
+                Op("Your targets are machine lifeforms, reconstructed from archived combat data."),
+                Pod("Report: Pod 217 online. Assigned to support Unit 11S."),
+                Pod("Proposal: Destroy targets to charge Pod Program: Laser."),
+                Op("The Commander reads these logs, so no pressure."),
+            },
             debriefSystemLine: "Analysis: Simulation 01 cleared. Combat parameters within tolerance.",
-            debrief:
-                "Nice work, 11S. Your reaction time is above the unit average.\n" +
-                "...I wasn't supposed to tell you that.\n" +
-                "Proceed to the next simulation."));
+            debrief: new[]
+            {
+                Op("Nice work, 11S. Your reaction time is above the unit average."),
+                Op("...I wasn't supposed to tell you that."),
+                Pod("Report: Operator 17O has disclosed restricted evaluation data. Logging."),
+                Op("...Pod, you don't have to log everything."),
+                Pod("Correction: Pod 217 is required to log everything."),
+            },
+            failureDialogue: StandardFailure()));
 
         LevelData sim02 = CreateOrUpdate("SIM02_AdvancedCombat", overwrite, level => level.EditorInitialize(
             levelName: "SIM 02: ADVANCED COMBAT",
@@ -60,15 +79,24 @@ public static class LevelDataDefaults
             baseFireRate: 1.9f, maxFireRate: 3.9f, aimedShotChance: .45f, alienBulletSpeed: 10f,
             darkBulletChance: .2f,
             briefingSystemLine: "ALERT: Enemy aggression parameters increased.",
-            briefing:
-                "Simulation 02 raises enemy speed and rate of fire.\n" +
-                "This combat data was recorded before you were activated.\n" +
-                "Keep moving. Don't let them pin you down.",
+            briefing: new[]
+            {
+                Op("This simulation uses combat data recorded on the surface."),
+                Op("It was recorded before you were activated."),
+                Pod("Query: Current status of the unit that recorded this data?"),
+                Op("...That's not relevant to your certification."),
+                Op("Stay focused, 11S."),
+            },
             debriefSystemLine: "Analysis: Simulation 02 cleared. Adaptation rate: high.",
-            debrief:
-                "You're adapting faster than the model predicted.\n" +
-                "One simulation left. Then you're cleared for deployment.\n" +
-                "Earth is... well. You'll see it soon."));
+            debrief: new[]
+            {
+                Op("Good work, 11S. Next stop is the surface."),
+                Op("Earth is... well. You'll see it soon."),
+                Pod("Query: Should Unit 11S be informed of current surface conditions?"),
+                Op("Not yet."),
+                Pod("Report: Request noted."),
+            },
+            failureDialogue: StandardFailure()));
 
         LevelData sim03 = CreateOrUpdate("SIM03_Anomaly", overwrite, level => level.EditorInitialize(
             levelName: "SIM 03: ANOMALY",
@@ -78,25 +106,30 @@ public static class LevelDataDefaults
             baseFireRate: 2.1f, maxFireRate: 4.0f, aimedShotChance: .5f, alienBulletSpeed: 10.5f,
             darkBulletChance: .35f,
             briefingSystemLine: "ALERT: Simulation 03 contains unverified data.",
-            briefing:
-                "This one wasn't on the schedule. It was added to your queue this morning.\n" +
-                "The enemy data doesn't match any training record I have access to.\n" +
-                "I've reported it. I'm told it's within parameters.\n" +
-                "Just... stay sharp, 11S.",
+            briefing: new[]
+            {
+                Op("11S, wait. This one wasn't on the schedule."),
+                Op("The enemy data doesn't match any training record I have access to."),
+                Op("Pod, can you identify the source?"),
+                Pod("Negative. Access restricted."),
+                Op("...Restricted? By who?"),
+                Pod("Information unavailable."),
+                Op("I've reported it. I'm told it's within parameters."),
+                Op("Just... stay sharp, 11S."),
+            },
+            // The certification conversation (GameManager) replaces SIM 03's debrief
             debriefSystemLine: "Analysis: Simulation 03 cleared. Anomalous data: purged.",
-            debrief:
-                "That's all of them. Certification is complete.\n" +
-                "Unit No. 11 Type S, you are cleared for deployment to Earth.\n" +
-                "I'll be your Operator down there, too.\n" +
-                "...If that's all right.\n" +
-                "Glory to Mankind.",
+            debrief: new DialogueLine[0],
             failureTitle: "Simulation Integrity Compromised",
             failureSystemLine: "ALERT: Connection to unit interrupted.",
-            failureMessage:
-                "11S? 11S, respond—\n" +
-                "...Your vitals are stable. I'm pulling you out.\n" +
-                "Resetting simulation.\n" +
-                "...I'm told this is within parameters.",
+            failureDialogue: new[]
+            {
+                Op("11S? 11S, respond--"),
+                Op("...Your vitals are stable. I'm pulling you out."),
+                Pod("Report: Unit 11S data intact. Simulation will be reinitialized."),
+                Op("Within parameters."),
+                Op("...That's what they keep telling me."),
+            },
             failureMenuLabel: "[ Reinitialize ]"));
 
         AssetDatabase.SaveAssets();

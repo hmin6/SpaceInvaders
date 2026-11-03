@@ -10,6 +10,8 @@ using UnityEngine.InputSystem;
 public class Pod : MonoBehaviour
 {
     [Header("Inscribed")]
+    [Tooltip("Shown on dialogue labels and the Pod's in-play commentary")]
+    [SerializeField] private string designation = "POD 217";
     [Tooltip("Found automatically if left empty")]
     [SerializeField] private Spaceship ship;
     [Tooltip("Found automatically if left empty")]
@@ -40,7 +42,10 @@ public class Pod : MonoBehaviour
     public event Action Ready;
     // When the laser fires
     public event Action Fired;
+    // When the laser ends, with the number of targets it destroyed
+    public event Action<int> LaserFinished;
 
+    public string Designation => designation;
     public int Charge { get; private set; }
     public int KillsToCharge => killsToCharge;
     public bool IsFiring { get; private set; }
@@ -54,6 +59,7 @@ public class Pod : MonoBehaviour
     private Transform beamOuter;
     private Transform beamCore;
     private float laserTimer;
+    private int laserKills;
     private readonly List<Alien> hits = new List<Alien>();
 
     private Transform shakeCamera;
@@ -150,6 +156,7 @@ public class Pod : MonoBehaviour
         }
 
         fleet.CollectAliensInBeam(transform.position.x, hitHalfWidth, transform.position.y, hits);
+        laserKills += hits.Count;
         foreach (Alien alien in hits)
         {
             alien.Die(); // may clear the level, which ends the laser through OnStateChanged
@@ -194,6 +201,7 @@ public class Pod : MonoBehaviour
         ChargeChanged?.Invoke(Charge, killsToCharge);
         IsFiring = true;
         laserTimer = laserDuration;
+        laserKills = 0;
         beam.gameObject.SetActive(true);
         if (shakeCamera != null)
         {
@@ -215,6 +223,7 @@ public class Pod : MonoBehaviour
         {
             shakeCamera.localPosition = cameraRestPosition;
         }
+        LaserFinished?.Invoke(laserKills);
     }
 
     // Widens quickly, holds with a slight flicker, then narrows away; shakes the camera meanwhile

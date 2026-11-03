@@ -26,24 +26,36 @@ MonoBehaviour:
   alienBulletSpeed: 10.5
   darkBulletChance: 0.35
   briefingSystemLine: 'ALERT: Simulation 03 contains unverified data.'
-  briefing: 'This one wasn''t on the schedule. It was added to your queue this morning.
-
-    The enemy data doesn''t match any training record I have access to.
-
-    I''ve reported it. I''m told it''s within parameters.
-
-    Just... stay sharp, 11S.'
+  briefingDialogue:
+  - speaker: 0
+    text: 11S, wait. This one wasn't on the schedule.
+  - speaker: 0
+    text: The enemy data doesn't match any training record I have access to.
+  - speaker: 0
+    text: Pod, can you identify the source?
+  - speaker: 1
+    text: Negative. Access restricted.
+  - speaker: 0
+    text: ...Restricted? By who?
+  - speaker: 1
+    text: Information unavailable.
+  - speaker: 0
+    text: I've reported it. I'm told it's within parameters.
+  - speaker: 0
+    text: Just... stay sharp, 11S.
   debriefSystemLine: 'Analysis: Simulation 03 cleared. Anomalous data: purged.'
-  debrief: 'That''s all of them. Certification is complete.
-
-    Unit No. 11 Type S, you are cleared for deployment to Earth.
-
-    I''ll be your Operator down there, too.
-
-    ...If that''s all right.
-
-    Glory to Mankind.'
+  debriefDialogue: []
   failureTitle: Simulation Integrity Compromised
   failureSystemLine: 'ALERT: Connection to unit interrupted.'
-  failureMessage: "11S? 11S, respond\u2014\n...Your vitals are stable. I'm pulling you out.\nResetting simulation.\n...I'm told this is within parameters."
+  failureDialogue:
+  - speaker: 0
+    text: 11S? 11S, respond--
+  - speaker: 0
+    text: ...Your vitals are stable. I'm pulling you out.
+  - speaker: 1
+    text: 'Report: Unit 11S data intact. Simulation will be reinitialized.'
+  - speaker: 0
+    text: Within parameters.
+  - speaker: 0
+    text: ...That's what they keep telling me.
   failureMenuLabel: '[ Reinitialize ]'

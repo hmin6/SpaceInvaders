@@ -44,6 +44,13 @@ public class AlienFleet : MonoBehaviour
 
     private List<Alien> aliens = new List<Alien>();
     private int startingCount;
+
+    // For PodChatter. (System.Action, because "using System" would make Random ambiguous here.)
+    public event System.Action<int> AliensRemainingChanged; // after each alien is removed
+    public event System.Action<bool> BulletFired;           // true = dark (indestructible) shot
+
+    // Current sideways speed relative to the full fleet's (1 = base speed)
+    public float SpeedMultiplier => baseSpeed > 0 ? speed / baseSpeed : 1f;
     private float loseLineY; // world y the aliens' bottom edge must not reach, set in Start
 
     // Reused by TryFire so firing doesn't allocate
@@ -139,6 +146,7 @@ public class AlienFleet : MonoBehaviour
             {
                 UpdateDifficulty();
             }
+            AliensRemainingChanged?.Invoke(aliens.Count);
         }
     }
 
@@ -262,7 +270,9 @@ public class AlienFleet : MonoBehaviour
         {
             shooter = shooters[Random.Range(0, shooters.Count)];
         }
-        shooter.Fire(alienBulletSpeed, Random.value < darkBulletChance);
+        bool dark = Random.value < darkBulletChance;
+        shooter.Fire(alienBulletSpeed, dark);
+        BulletFired?.Invoke(dark);
     }
 
     // Fills results with every alien within halfWidth of x and above minY (for the Pod's laser).

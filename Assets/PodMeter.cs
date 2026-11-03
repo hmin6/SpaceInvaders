@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 
 // HUD meter for the Pod, built at runtime under this Canvas (bottom-left): a "POD PROGRAM: LASER"
-// label, a segmented charge bar that pulses orange when ready, and a short system message.
+// label and a segmented charge bar that pulses orange when ready. (PodChatter announces it.)
 [RequireComponent(typeof(Canvas))]
 public class PodMeter : MonoBehaviour
 {
@@ -15,7 +15,6 @@ public class PodMeter : MonoBehaviour
     [Header("Text")]
     [SerializeField] private string label = "Pod Program: Laser";
     [SerializeField] private string keyHint = "[ E ]";
-    [SerializeField] private string readyMessage = "Proposal: Pod Program available.";
 
     [Header("Layout")]
     [Tooltip("Bottom-left corner of the meter, in reference pixels (1920 x 1080) from the screen's bottom-left")]
@@ -23,17 +22,10 @@ public class PodMeter : MonoBehaviour
     [SerializeField] private float barWidth = 420f;
     [SerializeField] private float segmentGap = 6f;
 
-    [Header("Message Timing")]
-    [SerializeField] private float messageFadeIn = .2f;
-    [SerializeField] private float messageHold = 2.5f;
-    [SerializeField] private float messageFadeOut = .6f;
-
     private TextMeshProUGUI labelText;
     private TextMeshProUGUI keyText;
-    private TextMeshProUGUI messageText;
     private RectTransform barRoot;
     private Image[] segments = new Image[0];
-    private float messageStartTime = -100f;
 
     private static readonly Color EmptySegment = NierStyle.WithAlpha(NierStyle.Ink, .25f);
 
@@ -45,11 +37,6 @@ public class PodMeter : MonoBehaviour
         root.SetAsFirstSibling();
 
         Vector2 bottomLeft = Vector2.zero;
-
-        messageText = NierStyle.CreateText("Message", root, readyMessage, 22, NierStyle.Ink,
-            TextAlignmentOptions.BottomLeft, font, 6);
-        NierStyle.Place(messageText.rectTransform, bottomLeft, position + new Vector2(0, 84), new Vector2(800, 34));
-        messageText.alpha = 0;
 
         labelText = NierStyle.CreateText("Label", root, label, 22, NierStyle.InkDark,
             TextAlignmentOptions.BottomLeft, font, 8);
@@ -81,7 +68,6 @@ public class PodMeter : MonoBehaviour
 
         BuildSegments(pod.KillsToCharge);
         pod.ChargeChanged += OnChargeChanged;
-        pod.Ready += OnReady;
         OnChargeChanged(pod.Charge, pod.KillsToCharge);
     }
 
@@ -90,7 +76,6 @@ public class PodMeter : MonoBehaviour
         if (pod != null)
         {
             pod.ChargeChanged -= OnChargeChanged;
-            pod.Ready -= OnReady;
         }
     }
 
@@ -115,11 +100,6 @@ public class PodMeter : MonoBehaviour
         }
     }
 
-    void OnReady()
-    {
-        messageStartTime = Time.unscaledTime;
-    }
-
     void Update()
     {
         // Pulse the label, key hint and segments orange while the laser is ready
@@ -139,12 +119,5 @@ public class PodMeter : MonoBehaviour
             labelText.color = NierStyle.InkDark;
             keyText.color = NierStyle.Ink;
         }
-
-        // Unscaled, so the message still fades if a screen freezes the game
-        float t = Time.unscaledTime - messageStartTime;
-        float alpha = t < messageFadeIn ? t / messageFadeIn
-            : t < messageFadeIn + messageHold ? 1f
-            : 1f - (t - messageFadeIn - messageHold) / messageFadeOut;
-        messageText.alpha = Mathf.Clamp01(alpha);
     }
 }

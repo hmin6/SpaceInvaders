@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// One combat simulation: fleet and firing settings plus the Operator's briefing and debrief text.
+// One combat simulation: fleet and firing settings plus the briefing, debrief and failure conversations.
 // GameManager plays a list of these in order. Values are read-only at runtime, because changes
 // made to a ScriptableObject during Play mode are saved into the asset.
 // Create via Assets > Create > YoRHa > Level Data, or Tools > YoRHa > Create Default Levels.
@@ -38,22 +39,19 @@ public class LevelData : ScriptableObject
     [SerializeField] private float darkBulletChance = 0f;
 
     [Header("Briefing")]
-    [Tooltip("Short formal system line shown above the Operator's message")]
+    [Tooltip("Short formal system line shown above the conversation")]
     [SerializeField] private string briefingSystemLine;
-    [TextArea(3, 6)]
-    [SerializeField] private string briefing;
+    [SerializeField] private List<DialogueLine> briefingDialogue = new List<DialogueLine>();
 
     [Header("Debrief")]
     [SerializeField] private string debriefSystemLine;
-    [Tooltip("On the final level, this is the certification message")]
-    [TextArea(3, 6)]
-    [SerializeField] private string debrief;
+    [Tooltip("Not shown on the final level, where GameManager's certification conversation is used instead")]
+    [SerializeField] private List<DialogueLine> debriefDialogue = new List<DialogueLine>();
 
     [Header("Failure (leave empty to use the NierScreens defaults)")]
     [SerializeField] private string failureTitle;
     [SerializeField] private string failureSystemLine;
-    [TextArea(2, 6)]
-    [SerializeField] private string failureMessage;
+    [SerializeField] private List<DialogueLine> failureDialogue = new List<DialogueLine>();
     [SerializeField] private string failureMenuLabel;
 
     public string LevelName => levelName;
@@ -70,12 +68,12 @@ public class LevelData : ScriptableObject
     public float AlienBulletSpeed => alienBulletSpeed;
     public float DarkBulletChance => darkBulletChance;
     public string BriefingSystemLine => briefingSystemLine;
-    public string Briefing => briefing;
+    public IReadOnlyList<DialogueLine> BriefingDialogue => briefingDialogue;
     public string DebriefSystemLine => debriefSystemLine;
-    public string Debrief => debrief;
+    public IReadOnlyList<DialogueLine> DebriefDialogue => debriefDialogue;
     public string FailureTitle => failureTitle;
     public string FailureSystemLine => failureSystemLine;
-    public string FailureMessage => failureMessage;
+    public IReadOnlyList<DialogueLine> FailureDialogue => failureDialogue;
     public string FailureMenuLabel => failureMenuLabel;
 
 #if UNITY_EDITOR
@@ -83,15 +81,10 @@ public class LevelData : ScriptableObject
     public void EditorInitialize(string levelName, bool isAnomaly, int columns, int rows,
         float baseSpeed, float maxSpeedMultiplier, float speedUpExponent,
         float baseFireRate, float maxFireRate, float aimedShotChance, float alienBulletSpeed,
-        string briefingSystemLine, string briefing, string debriefSystemLine, string debrief,
-        string failureTitle = "", string failureSystemLine = "", string failureMessage = "",
-        string failureMenuLabel = "", float darkBulletChance = 0f)
+        float darkBulletChance, string briefingSystemLine, DialogueLine[] briefing,
+        string debriefSystemLine, DialogueLine[] debrief, DialogueLine[] failureDialogue,
+        string failureTitle = "", string failureSystemLine = "", string failureMenuLabel = "")
     {
-        this.darkBulletChance = darkBulletChance;
-        this.failureTitle = failureTitle;
-        this.failureSystemLine = failureSystemLine;
-        this.failureMessage = failureMessage;
-        this.failureMenuLabel = failureMenuLabel;
         this.levelName = levelName;
         this.isAnomaly = isAnomaly;
         this.columns = columns;
@@ -103,10 +96,15 @@ public class LevelData : ScriptableObject
         this.maxFireRate = maxFireRate;
         this.aimedShotChance = aimedShotChance;
         this.alienBulletSpeed = alienBulletSpeed;
+        this.darkBulletChance = darkBulletChance;
         this.briefingSystemLine = briefingSystemLine;
-        this.briefing = briefing;
+        this.briefingDialogue = new List<DialogueLine>(briefing);
         this.debriefSystemLine = debriefSystemLine;
-        this.debrief = debrief;
+        this.debriefDialogue = new List<DialogueLine>(debrief);
+        this.failureTitle = failureTitle;
+        this.failureSystemLine = failureSystemLine;
+        this.failureDialogue = new List<DialogueLine>(failureDialogue);
+        this.failureMenuLabel = failureMenuLabel;
     }
 #endif
 }

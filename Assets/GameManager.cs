@@ -26,8 +26,12 @@ public class GameManager : MonoBehaviour
         public int maxLivesLost;
         [Tooltip("Most retries the player can use across the whole run and still get this rank")]
         public int maxRetries;
+        [Tooltip("The Operator's assessment, first in the certification conversation")]
         [TextArea(3, 6)]
         public string operatorMessage;
+        [Tooltip("The Pod's line that follows it")]
+        [TextArea(1, 3)]
+        public string podLine;
     }
 
     // How the next scene load should start. Statics survive SceneManager.LoadScene, and
@@ -50,57 +54,12 @@ public class GameManager : MonoBehaviour
     [Tooltip("Lives at the start of every simulation (the unit is repaired between sims)")]
     [SerializeField] private int startingLives = 3;
 
-    [Header("Certification Ranks")]
-    [Tooltip("Best first. The run gets the first rank whose limits it's within; the last entry is the fallback.")]
-    [SerializeField] private List<CertificationRank> certificationRanks = new List<CertificationRank>
-    {
-        new CertificationRank
-        {
-            rank = "S", maxLivesLost = 1, maxRetries = 0,
-            operatorMessage =
-                "Certification complete.\n" +
-                "...I checked the data twice, 11S.\n" +
-                "I've never filed a log like this one.\n" +
-                "You're cleared for deployment to Earth.\n" +
-                "I'll be your Operator down there, too.\n" +
-                "...If that's all right.\n" +
-                "Glory to Mankind."
-        },
-        new CertificationRank
-        {
-            rank = "A", maxLivesLost = 3, maxRetries = 0,
-            operatorMessage =
-                "Certification complete. That was excellent work, 11S.\n" +
-                "A few hits, but nothing the engineers will lose sleep over.\n" +
-                "You're cleared for deployment to Earth.\n" +
-                "I'll be your Operator down there, too.\n" +
-                "...If that's all right.\n" +
-                "Glory to Mankind."
-        },
-        new CertificationRank
-        {
-            rank = "B", maxLivesLost = 8, maxRetries = 2,
-            operatorMessage =
-                "Certification complete. You took damage, but you adapted.\n" +
-                "Down there, that matters more than a clean record.\n" +
-                "You're cleared for deployment to Earth.\n" +
-                "I'll be your Operator down there, too.\n" +
-                "...If that's all right.\n" +
-                "Glory to Mankind."
-        },
-        new CertificationRank
-        {
-            rank = "C", maxLivesLost = int.MaxValue, maxRetries = int.MaxValue,
-            operatorMessage =
-                "Certification complete.\n" +
-                "...You made it. I wasn't sure for a while.\n" +
-                "Please don't put that in your log.\n" +
-                "You're cleared for deployment to Earth.\n" +
-                "I'll be your Operator down there, too.\n" +
-                "...If that's all right.\n" +
-                "Glory to Mankind."
-        },
-    };
+    [Header("Certification")]
+    [Tooltip("Best first. The run gets the first rank whose limits it's within; the last entry is the fallback. " +
+             "Right-click this component's header > Reset Certification Dialogue to restore the defaults.")]
+    [SerializeField] private List<CertificationRank> ranks = DefaultRanks();
+    [Tooltip("Played after the rank's Operator message and Pod line, for every rank")]
+    [SerializeField] private List<DialogueLine> certificationClosing = DefaultClosing();
 
     [Header("Testing")]
     [Tooltip("Turn off to skip the title screen and briefing")]
@@ -278,14 +237,99 @@ public class GameManager : MonoBehaviour
     // The first rank whose limits the run is within; the last rank is the fallback
     public CertificationRank GetCertificationRank()
     {
-        foreach (CertificationRank tier in certificationRanks)
+        foreach (CertificationRank tier in ranks)
         {
             if (runLivesLost <= tier.maxLivesLost && runRetries <= tier.maxRetries)
             {
                 return tier;
             }
         }
-        return certificationRanks.Count > 0 ? certificationRanks[certificationRanks.Count - 1] : null;
+        return ranks.Count > 0 ? ranks[ranks.Count - 1] : null;
+    }
+
+    // The rank's Operator message, then its Pod line, then the shared closing exchange
+    public List<DialogueLine> GetCertificationDialogue(CertificationRank rank)
+    {
+        List<DialogueLine> dialogue = new List<DialogueLine>();
+        if (rank != null)
+        {
+            dialogue.Add(DialogueLine.Operator(rank.operatorMessage));
+            dialogue.Add(DialogueLine.Pod(rank.podLine));
+        }
+        dialogue.AddRange(certificationClosing);
+        return dialogue;
+    }
+
+    static List<CertificationRank> DefaultRanks()
+    {
+        return new List<CertificationRank>
+        {
+            new CertificationRank
+            {
+                rank = "S", maxLivesLost = 1, maxRetries = 0,
+                operatorMessage =
+                    "Certification complete.\n" +
+                    "...I checked the data twice, 11S.\n" +
+                    "I've never filed a log like this one.\n" +
+                    "You're cleared for deployment to Earth.",
+                podLine = "Analysis: Results exceed projected parameters. ...Logging."
+            },
+            new CertificationRank
+            {
+                rank = "A", maxLivesLost = 3, maxRetries = 0,
+                operatorMessage =
+                    "Certification complete. That was excellent work, 11S.\n" +
+                    "A few hits, but nothing the engineers will lose sleep over.\n" +
+                    "You're cleared for deployment to Earth.",
+                podLine = "Report: Performance rated excellent. Minor damage sustained."
+            },
+            new CertificationRank
+            {
+                rank = "B", maxLivesLost = 8, maxRetries = 2,
+                operatorMessage =
+                    "Certification complete. You took damage, but you adapted.\n" +
+                    "Down there, that matters more than a clean record.\n" +
+                    "You're cleared for deployment to Earth.",
+                podLine = "Analysis: Unit adapted under pressure. Assessment: deployable."
+            },
+            new CertificationRank
+            {
+                rank = "C", maxLivesLost = int.MaxValue, maxRetries = int.MaxValue,
+                operatorMessage =
+                    "Certification complete.\n" +
+                    "...You made it. I wasn't sure for a while.\n" +
+                    "Please don't put that in your log.\n" +
+                    "You're cleared for deployment to Earth.",
+                podLine = "Report: Unit survived. Assessment: sufficient."
+            },
+        };
+    }
+
+    static List<DialogueLine> DefaultClosing()
+    {
+        return new List<DialogueLine>
+        {
+            DialogueLine.Operator("I'll be your Operator down there, too."),
+            DialogueLine.Operator("...If that's all right."),
+            DialogueLine.Operator("Pod. Take care of 11S."),
+            DialogueLine.Pod("Affirmative."),
+            DialogueLine.Operator("Glory to Mankind."),
+        };
+    }
+
+    // Right-click the component header in the Inspector. Restores the default ranks, messages
+    // and closing exchange (the scene keeps its own saved copy, so code changes don't reach it).
+    [ContextMenu("Reset Certification Dialogue")]
+    void ResetCertificationDialogue()
+    {
+#if UNITY_EDITOR
+        UnityEditor.Undo.RecordObject(this, "Reset Certification Dialogue");
+#endif
+        ranks = DefaultRanks();
+        certificationClosing = DefaultClosing();
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(this);
+#endif
     }
 
     void ReloadScene()

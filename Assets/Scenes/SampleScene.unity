@@ -669,19 +669,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 488e7c5999bed3840bdc8d5625ed17f3, type: 2}
   - {fileID: 11400000, guid: 75ca39a6400ae2046a0de082f53cb17b, type: 2}
   startingLives: 3
-  certificationRanks:
+  ranks:
   - rank: S
     maxLivesLost: 1
     maxRetries: 0
-    operatorMessage: 'Certification complete. ...I checked the data twice, 11S.
+    operatorMessage: 'Certification complete.
+
+      ...I checked the data twice, 11S.
 
       I''ve never filed a log like this one.
 
-      You''re cleared for deployment to Earth.
-
-      I''ll be your Operator down there, too. ...If that''s all right.
-
-      Glory to Mankind.'
+      You''re cleared for deployment to Earth.'
+    podLine: 'Analysis: Results exceed projected parameters. ...Logging.'
   - rank: A
     maxLivesLost: 3
     maxRetries: 0
@@ -689,11 +688,8 @@ MonoBehaviour:
 
       A few hits, but nothing the engineers will lose sleep over.
 
-      You''re cleared for deployment to Earth.
-
-      I''ll be your Operator down there, too. ...If that''s all right.
-
-      Glory to Mankind.'
+      You''re cleared for deployment to Earth.'
+    podLine: 'Report: Performance rated excellent. Minor damage sustained.'
   - rank: B
     maxLivesLost: 8
     maxRetries: 2
@@ -701,23 +697,30 @@ MonoBehaviour:
 
       Down there, that matters more than a clean record.
 
-      You''re cleared for deployment to Earth.
-
-      I''ll be your Operator down there, too. ...If that''s all right.
-
-      Glory to Mankind.'
+      You''re cleared for deployment to Earth.'
+    podLine: 'Analysis: Unit adapted under pressure. Assessment: deployable.'
   - rank: C
     maxLivesLost: 2147483647
     maxRetries: 2147483647
-    operatorMessage: 'Certification complete. ...You made it. I wasn''t sure for a while.
+    operatorMessage: 'Certification complete.
+
+      ...You made it. I wasn''t sure for a while.
 
       Please don''t put that in your log.
 
-      You''re cleared for deployment to Earth.
-
-      I''ll be your Operator down there, too. ...If that''s all right.
-
-      Glory to Mankind.'
+      You''re cleared for deployment to Earth.'
+    podLine: 'Report: Unit survived. Assessment: sufficient.'
+  certificationClosing:
+  - speaker: 0
+    text: I'll be your Operator down there, too.
+  - speaker: 0
+    text: ...If that's all right.
+  - speaker: 0
+    text: Pod. Take care of 11S.
+  - speaker: 1
+    text: Affirmative.
+  - speaker: 0
+    text: Glory to Mankind.
   showTitleScreen: 1
   firstLevelIndex: 0
 --- !u!4 &1062224570
@@ -796,6 +799,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 084b2fffa12e7f7448b5916b925a0932, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pod
+  designation: POD 217
   ship: {fileID: 1665563228}
   fleet: {fileID: 287620737}
   material: {fileID: 2100000, guid: 1610a0322352f2a44a0e0c9e80ef822b, type: 2}
@@ -1129,6 +1133,7 @@ GameObject:
   - component: {fileID: 2080831151}
   - component: {fileID: 2080831155}
   - component: {fileID: 2080831156}
+  - component: {fileID: 2080831157}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1241,10 +1246,12 @@ MonoBehaviour:
   startHint: Press Space or Enter
   controlsText: 'Left / Right : Move      Space : Fire      E / Shift : Pod Program'
   operatorName: Operator 17O
+  podName: POD 217
   typingSpeed: 45
   inputDelay: 0.4
   skipHint: Press any key to skip
   confirmHint: Press Space or Enter
+  nextHint: 'Press Space or Enter : Next'
   briefingTag: Briefing
   beginLabel: '[ Begin ]'
   debriefTitle: Simulation Complete
@@ -1254,21 +1261,31 @@ MonoBehaviour:
   repairedText: Unit repaired.
   failedTitle: Simulation Failed
   failedSystemLine: Unit will be recalibrated.
-  failedOperatorMessage: 'Don''t worry. Nobody passes on the first try.
-
-    ...Almost nobody.'
+  failedDialogue:
+  - speaker: 0
+    text: Don't worry. Nobody passes on the first try.
+  - speaker: 0
+    text: ...Almost nobody.
+  - speaker: 1
+    text: 'Proposal: Retry.'
   retryLabel: '[ Retry ]'
   retryHint: Press R or Enter
   certifiedTitle: Certification Complete
   totalKillsLabel: Total Targets Destroyed
   livesLostLabel: Lives Lost
   retriesLabel: Retries
-  epilogueText: 'Combat data uploaded to Bunker server.
-
-    Memory backup complete.'
+  epilogueSystemLines:
+  - Combat data uploaded to Bunker server.
+  - Memory backup complete.
+  epiloguePodLines:
+  - Backup confirmed.
+  - ...See you again, 11S.
   epilogueBlackFade: 1
   epiloguePause: 2
   epilogueTextFade: 2.5
+  epilogueLineGap: 1.5
+  epiloguePodPause: 3.5
+  epiloguePodGap: 2.5
   glitchDuration: 1
   glitchInterval: 0.05
   glitchCharacters: '#%&@$*/\|<>=+?!01_'
@@ -1290,13 +1307,85 @@ MonoBehaviour:
   font: {fileID: 0}
   label: 'Pod Program: Laser'
   keyHint: '[ E ]'
-  readyMessage: 'Proposal: Pod Program available.'
   position: {x: 40, y: 24}
   barWidth: 420
   segmentGap: 6
-  messageFadeIn: 0.2
-  messageHold: 2.5
-  messageFadeOut: 0.6
+--- !u!114 &2080831157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2080831150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c12a1a691588d2419a0cc0ba6147545, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PodChatter
+  pod: {fileID: 0}
+  fleet: {fileID: 0}
+  font: {fileID: 0}
+  position: {x: 40, y: 112}
+  size: {x: 640, y: 84}
+  showDuration: 3.5
+  cooldown: 6
+  fadeOut: 0.3
+  typingSpeed: 55
+  laserMultiKillCount: 3
+  speedAlertMultipliers:
+  - 2.5
+  - 4
+  anomalyInterval: {x: 12, y: 20}
+  levelStart:
+    priority: 1
+    variants:
+    - 'Report: Combat simulation initiated.'
+    - 'Report: Hostile targets detected. Engaging.'
+  podProgramReady:
+    priority: 1
+    variants:
+    - 'Proposal: Pod Program available.'
+    - 'Report: Laser charge complete.'
+  laserMultiKill:
+    priority: 1
+    variants:
+    - 'Analysis: Multiple targets eliminated. Efficient.'
+    - 'Report: Target cluster neutralized.'
+  playerHit:
+    priority: 1
+    variants:
+    - 'Alert: Damage sustained.'
+    - 'Alert: Unit 11S hit. Proposal: Increase evasive maneuvers.'
+  lastLife:
+    priority: 3
+    variants:
+    - 'Alert: Unit integrity critical. Proposal: Avoid further damage.'
+    - 'Alert: One more hit will terminate the simulation.'
+  fleetAccelerating:
+    priority: 1
+    variants:
+    - 'Analysis: Enemy movement speed increasing.'
+    - 'Alert: Enemy formation accelerating.'
+  threeTargetsLeft:
+    priority: 1
+    variants:
+    - 'Report: Three targets remaining.'
+  finalTarget:
+    priority: 2
+    variants:
+    - 'Report: Final target.'
+  firstDarkBullet:
+    priority: 2
+    variants:
+    - 'Alert: Indestructible projectiles detected. Proposal: Evade.'
+    - 'Analysis: Dark projectiles cannot be intercepted.'
+  anomalyRemarks:
+    priority: 0
+    variants:
+    - 'Query: Enemy data has no origin record.'
+    - 'Report: Request to log anomaly... denied.'
+    - 'Analysis: This simulation was not authored by the Bunker.'
+    - 'Alert: Unidentified signal in simulation layer.'
 --- !u!1001 &3533950217798640327
 PrefabInstance:
   m_ObjectHideFlags: 0
