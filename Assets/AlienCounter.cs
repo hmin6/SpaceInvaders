@@ -3,6 +3,9 @@ using TMPro;
 
 public class AlienCounter : MonoBehaviour
 {
+    [Tooltip("{0} is replaced with the number of aliens left")]
+    [SerializeField] private string format = "Targets Remaining: {0}";
+
     private TextMeshProUGUI uiText;
 
     // Awake (not Start) so uiText is ready before AlienFleet.Start calls SetRemaining
@@ -19,6 +22,6 @@ public class AlienCounter : MonoBehaviour
         {
             uiText = GetComponent<TextMeshProUGUI>();
         }
-        uiText.text = "Remaining Aliens: " + remaining.ToString("#,0");
+        uiText.text = string.Format(format, remaining);
     }
 }

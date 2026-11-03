@@ -32,6 +32,8 @@ public class AlienFleet : MonoBehaviour
     [Tooltip("Chance that a shot comes from the column nearest the player instead of a random column")]
     [Range(0, 1)]
     [SerializeField] private float aimedShotChance = 0.35f;
+    [Tooltip("Alien bullet speed in units/sec. 0 = use the AlienBullet prefab's speed.")]
+    [SerializeField] private float alienBulletSpeed = 0f;
 
     [Header("Lose Line")]
     [Tooltip("How far above the top of the spaceship the bottom of the lowest alien can reach before the game is lost")]
@@ -39,6 +41,7 @@ public class AlienFleet : MonoBehaviour
 
     private List<Alien> aliens = new List<Alien>();
     private int startingCount;
+    private float loseLineY; // world y the aliens' bottom edge must not reach, set in Start
 
     // Reused by TryFire so firing doesn't allocate
     private Alien[] lowestInColumn;
@@ -54,11 +57,23 @@ public class AlienFleet : MonoBehaviour
 
     void Start()
     {
+        // The settings above are used as-is when GameManager has no levels
+        GameObject prefab = alienPrefab;
+        if (GameManager.Instance != null && GameManager.Instance.CurrentLevel != null)
+        {
+            LevelData level = GameManager.Instance.CurrentLevel;
+            ApplyLevel(level);
+            if (level.AlienPrefabOverride != null)
+            {
+                prefab = level.AlienPrefabOverride;
+            }
+        }
+
         for (int i = 0; i < columns; i++)
         {
             for (int j = 0; j < rows; j++)
             {
-                GameObject alienGO = Instantiate<GameObject>(alienPrefab);
+                GameObject alienGO = Instantiate<GameObject>(prefab);
                 alienGO.transform.position = new Vector3(2 * i - 12, 10 - 2 * j, 0);
                 Alien alien = alienGO.GetComponent<Alien>();
                 alien.fleet = this;
@@ -76,6 +91,18 @@ public class AlienFleet : MonoBehaviour
         {
             spaceship = FindAnyObjectByType<Spaceship>();
         }
+
+        // Fixed at level start, so nothing that happens to the ship later can move the line
+        if (spaceship != null)
+        {
+            loseLineY = spaceship.TopY + loseLineOffset;
+        }
+        else
+        {
+            loseLineY = float.NegativeInfinity;
+            Debug.LogWarning("AlienFleet: no Spaceship found, so the aliens can't land.", this);
+        }
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.RegisterAliens(startingCount);
@@ -101,7 +128,7 @@ public class AlienFleet : MonoBehaviour
             {
                 if (GameManager.Instance != null)
                 {
-                    GameManager.Instance.Win();
+                    GameManager.Instance.LevelCleared();
                 }
             }
             else
@@ -109,6 +136,20 @@ public class AlienFleet : MonoBehaviour
                 UpdateDifficulty();
             }
         }
+    }
+
+    // Copies the level's settings over this fleet's Inspector values
+    void ApplyLevel(LevelData level)
+    {
+        columns = level.Columns;
+        rows = level.Rows;
+        baseSpeed = level.BaseSpeed;
+        maxSpeedMultiplier = level.MaxSpeedMultiplier;
+        speedUpExponent = level.SpeedUpExponent;
+        baseFireRate = level.BaseFireRate;
+        maxFireRate = level.MaxFireRate;
+        aimedShotChance = level.AimedShotChance;
+        alienBulletSpeed = level.AlienBulletSpeed;
     }
 
     // Like classic Space Invaders, the fleet gets faster and fires more as aliens are destroyed.
@@ -158,8 +199,8 @@ public class AlienFleet : MonoBehaviour
             lowest = Mathf.Min(lowest, alien.BottomY);
         }
 
-        //lose if the aliens get down to the spaceship
-        if (spaceship != null && lowest <= spaceship.TopY + loseLineOffset)
+        //lose if the aliens get down to the spaceship's line
+        if (lowest <= loseLineY)
         {
             if (GameManager.Instance != null)
             {
@@ -216,7 +257,22 @@ public class AlienFleet : MonoBehaviour
         {
             shooter = shooters[Random.Range(0, shooters.Count)];
         }
-        shooter.Fire();
+        shooter.Fire(alienBulletSpeed);
+    }
+
+    // Fills results with every alien within halfWidth of x and above minY (for the Pod's laser).
+    // Callers kill them afterwards, since killing removes them from the list being searched.
+    public void CollectAliensInBeam(float x, float halfWidth, float minY, List<Alien> results)
+    {
+        results.Clear();
+        foreach (Alien alien in aliens)
+        {
+            Vector3 position = alien.transform.position;
+            if (Mathf.Abs(position.x - x) <= halfWidth && position.y >= minY)
+            {
+                results.Add(alien);
+            }
+        }
     }
 
     static Alien ClosestToX(List<Alien> candidates, float x)

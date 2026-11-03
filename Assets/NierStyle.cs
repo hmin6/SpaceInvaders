@@ -108,13 +108,20 @@ public static class NierStyle
     // Returns the marker so the caller can blink it.
     public static Image CreateMenuItem(Transform parent, string label, Vector2 position, TMP_FontAsset font)
     {
+        return CreateMenuItem(parent, label, position, font, out _);
+    }
+
+    // Same, also returning the label so its text can be changed later
+    public static Image CreateMenuItem(Transform parent, string label, Vector2 position, TMP_FontAsset font,
+        out TextMeshProUGUI text)
+    {
         Vector2 barSize = new Vector2(520, 72);
         Vector2 center = new Vector2(.5f, .5f);
 
         Image bar = CreateImage("MenuItem", parent, InkDark);
         Place(bar.rectTransform, center, position, barSize);
 
-        TextMeshProUGUI text = CreateText("Label", bar.transform, label, 38, Background,
+        text = CreateText("Label", bar.transform, label, 38, Background,
             TextAlignmentOptions.Center, font, 16);
         Stretch(text.rectTransform);
 

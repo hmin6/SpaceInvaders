@@ -39,8 +39,28 @@ public class Spaceship : MonoBehaviour
 
     void Awake()
     {
+        LockRigidbodies();
         renderers = GetComponentsInChildren<Renderer>();
         MeasureExtents();
+    }
+
+    // The ship is moved only by this script, so physics must never push or rotate it.
+    // Kinematic bodies ignore forces and gravity but still get OnCollisionEnter from the
+    // (non-kinematic) alien bullets. The scene's Spaceship has an extra non-kinematic Rigidbody
+    // added on top of the prefab's, which let bullet hits knock the ship away; this locks every one.
+    void LockRigidbodies()
+    {
+        Rigidbody[] bodies = GetComponents<Rigidbody>();
+        foreach (Rigidbody body in bodies)
+        {
+            body.isKinematic = true;
+            body.useGravity = false;
+            body.constraints = RigidbodyConstraints.FreezeAll;
+        }
+        if (bodies.Length > 1)
+        {
+            Debug.LogWarning("Spaceship has " + bodies.Length + " Rigidbodies; remove the extra one in the Inspector.", this);
+        }
     }
 
     void Start()

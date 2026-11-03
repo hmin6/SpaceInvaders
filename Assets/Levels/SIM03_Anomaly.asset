@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f15209abd2e9b4147a4a9d9cfa84511e, type: 3}
+  m_Name: SIM03_Anomaly
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelName: 'SIM 03: ANOMALY'
+  isAnomaly: 1
+  alienPrefabOverride: {fileID: 0}
+  columns: 10
+  rows: 4
+  baseSpeed: 7
+  maxSpeedMultiplier: 4.5
+  speedUpExponent: 1.4
+  baseFireRate: 2.1
+  maxFireRate: 4
+  aimedShotChance: 0.5
+  alienBulletSpeed: 10.5
+  briefingSystemLine: 'ALERT: Simulation 03 contains unverified data.'
+  briefing: 'This one wasn''t on the schedule. It was added to your queue this morning.
+
+    The enemy data doesn''t match any training record I have access to.
+
+    I''ve reported it. I''m told it''s within parameters.
+
+    Just... stay sharp, 11S.'
+  debriefSystemLine: 'Analysis: Simulation 03 cleared. Anomalous data: purged.'
+  debrief: 'That''s all of them. Certification is complete.
+
+    Unit No. 11 Type S, you are cleared for deployment to Earth.
+
+    I''ll be your Operator down there, too.
+
+    ...If that''s all right.
+
+    Glory to Mankind.'
+  failureTitle: Simulation Integrity Compromised
+  failureSystemLine: 'ALERT: Connection to unit interrupted.'
+  failureMessage: "11S? 11S, respond\u2014\n...Your vitals are stable. I'm pulling you out.\nResetting simulation.\n...I'm told this is within parameters."
+  failureMenuLabel: '[ Reinitialize ]'

@@ -119,6 +119,17 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!114 &287620737 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -8270462056835086372, guid: 34725686c1348b247a77b3f974763d41, type: 3}
+  m_PrefabInstance: {fileID: 3533950217798640327}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fe700f4a4229c443a9921addc2f7517, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -605,6 +616,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ef47ca4385e15e4b9c068915295b3db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AlienCounter
+  format: 'Targets Remaining: {0}'
 --- !u!114 &970817119
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -651,8 +663,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd43d4e6ee894764688dc9accb2a261b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  levels:
+  - {fileID: 11400000, guid: 273fa815c59c94944a62986e27102e9a, type: 2}
+  - {fileID: 11400000, guid: 488e7c5999bed3840bdc8d5625ed17f3, type: 2}
+  - {fileID: 11400000, guid: 75ca39a6400ae2046a0de082f53cb17b, type: 2}
   startingLives: 3
   showTitleScreen: 1
+  firstLevelIndex: 0
 --- !u!4 &1062224570
 Transform:
   m_ObjectHideFlags: 0
@@ -687,6 +704,64 @@ MonoBehaviour:
   shipDebris: 18
   shipDarkDebris: 8
   shipFlashSize: 3
+--- !u!1 &1124634131
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1124634133}
+  - component: {fileID: 1124634132}
+  m_Layer: 0
+  m_Name: Pod
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1124634132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1124634131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 084b2fffa12e7f7448b5916b925a0932, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Pod
+  ship: {fileID: 1665563228}
+  fleet: {fileID: 287620737}
+  material: {fileID: 2100000, guid: 1610a0322352f2a44a0e0c9e80ef822b, type: 2}
+  offset: {x: 2.4, y: 1.2}
+  followSmoothTime: 0.12
+  bobHeight: 0.12
+  bobSpeed: 2.5
+  killsToCharge: 8
+  laserDuration: 0.6
+  beamWidth: 0.9
+  coreWidth: 0.35
+  hitHalfWidth: 0.9
+  beamLength: 40
+  screenShake: 0.12
+--- !u!4 &1124634133
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1124634131}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1225932577
 GameObject:
   m_ObjectHideFlags: 0
@@ -794,9 +869,9 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!114 &1665563228 stripped
 MonoBehaviour:
@@ -990,6 +1065,7 @@ GameObject:
   - component: {fileID: 2080831152}
   - component: {fileID: 2080831151}
   - component: {fileID: 2080831155}
+  - component: {fileID: 2080831156}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1095,17 +1171,65 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NierScreens
   font: {fileID: 0}
+  headerText: YoRHa // Bunker Combat Simulation System
   titleText: Space Invaders
-  subtitleText: 'YoRHa Unit: Combat Simulation'
+  subtitleText: YoRHa No. 11 Type S // Final Combat Certification
   startLabel: '[ Start ]'
   startHint: Press Space or Enter
-  controlsText: 'Left / Right Arrows : Move        Space : Fire'
-  winText: You Win
-  loseText: Game Over
+  controlsText: 'Left / Right : Move      Space : Fire      E / Shift : Pod Program'
+  operatorName: Operator 17O
+  typingSpeed: 45
+  inputDelay: 0.4
+  skipHint: Press any key to skip
+  confirmHint: Press Space or Enter
+  briefingTag: Briefing
+  beginLabel: '[ Begin ]'
+  debriefTitle: Simulation Complete
+  continueLabel: '[ Continue ]'
+  killsLabel: Targets Destroyed
+  livesLabel: Lives Remaining
+  failedTitle: Simulation Failed
+  failedSystemLine: Unit will be recalibrated.
+  failedOperatorMessage: 'Don''t worry. Nobody passes on the first try.
+
+    ...Almost nobody.'
   retryLabel: '[ Retry ]'
   retryHint: Press R or Enter
+  certifiedTitle: Certification Complete
+  epilogueText: 'Combat data uploaded to Bunker server.
+
+    Memory backup complete.'
+  epilogueBlackFade: 1
+  epiloguePause: 2
+  epilogueTextFade: 2.5
+  glitchDuration: 1
+  glitchInterval: 0.05
+  glitchCharacters: '#%&@$*/\|<>=+?!01_'
   flashDuration: 0.25
   flashAlpha: 0.35
+--- !u!114 &2080831156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2080831150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0815500e01550c2449f38048d6c5192e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PodMeter
+  pod: {fileID: 0}
+  font: {fileID: 0}
+  label: 'Pod Program: Laser'
+  keyHint: '[ E ]'
+  readyMessage: 'Proposal: Pod Program available.'
+  position: {x: 40, y: 24}
+  barWidth: 420
+  segmentGap: 6
+  messageFadeIn: 0.2
+  messageHold: 2.5
+  messageFadeOut: 0.6
 --- !u!1001 &3533950217798640327
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1263,3 +1387,4 @@ SceneRoots:
   - {fileID: 2080831154}
   - {fileID: 1225932580}
   - {fileID: 1062224570}
+  - {fileID: 1124634133}

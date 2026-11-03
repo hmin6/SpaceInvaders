@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f15209abd2e9b4147a4a9d9cfa84511e, type: 3}
+  m_Name: SIM02_AdvancedCombat
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelName: 'SIM 02: ADVANCED COMBAT'
+  isAnomaly: 0
+  alienPrefabOverride: {fileID: 0}
+  columns: 10
+  rows: 4
+  baseSpeed: 6
+  maxSpeedMultiplier: 4.5
+  speedUpExponent: 1.5
+  baseFireRate: 1.9
+  maxFireRate: 3.9
+  aimedShotChance: 0.45
+  alienBulletSpeed: 10
+  briefingSystemLine: 'ALERT: Enemy aggression parameters increased.'
+  briefing: 'Simulation 02 raises enemy speed and rate of fire.
+
+    This combat data was recorded before you were activated.
+
+    Keep moving. Don''t let them pin you down.'
+  debriefSystemLine: 'Analysis: Simulation 02 cleared. Adaptation rate: high.'
+  debrief: 'You''re adapting faster than the model predicted.
+
+    One simulation left. Then you''re cleared for deployment.
+
+    Earth is... well. You''ll see it soon.'
+  failureTitle: 
+  failureSystemLine: 
+  failureMessage: 
+  failureMenuLabel: 

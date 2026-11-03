@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f15209abd2e9b4147a4a9d9cfa84511e, type: 3}
+  m_Name: SIM01_BasicCombat
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelName: 'SIM 01: BASIC COMBAT'
+  isAnomaly: 0
+  alienPrefabOverride: {fileID: 0}
+  columns: 10
+  rows: 3
+  baseSpeed: 5
+  maxSpeedMultiplier: 5
+  speedUpExponent: 1.5
+  baseFireRate: 1.5
+  maxFireRate: 3.5
+  aimedShotChance: 0.35
+  alienBulletSpeed: 9
+  briefingSystemLine: 'Proposal: Unit No. 11S proceed to combat simulation 01.'
+  briefing: 'Good morning, 11S. This is Operator 17O.
+
+    Targets are machine lifeforms rebuilt from archive data.
+
+    Your Pod is online. Destroy enough targets to charge its laser.
+
+    ...The Commander reads these logs, so no pressure.'
+  debriefSystemLine: 'Analysis: Simulation 01 cleared. Combat parameters within tolerance.'
+  debrief: 'Nice work, 11S. Your reaction time is above the unit average.
+
+    ...I wasn''t supposed to tell you that.
+
+    Proceed to the next simulation.'
+  failureTitle: 
+  failureSystemLine: 
+  failureMessage: 
+  failureMenuLabel: 

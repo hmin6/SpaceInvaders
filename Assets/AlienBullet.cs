@@ -7,6 +7,22 @@ public class AlienBullet : MonoBehaviour
     // Units per second. Was 5 (.1 per physics step); raised for difficulty, see CODE_ISSUES.md
     [SerializeField] private float speed = 9f;
 
+    // Moved only by this script; collisions must not push it (they still fire OnCollisionEnter)
+    void Awake()
+    {
+        if (TryGetComponent(out Rigidbody body))
+        {
+            body.useGravity = false;
+            body.constraints = RigidbodyConstraints.FreezeAll;
+        }
+    }
+
+    // Lets the current level override the prefab's speed
+    public void SetSpeed(float newSpeed)
+    {
+        speed = newSpeed;
+    }
+
     void FixedUpdate()
     {
         Vector3 position = transform.position;
