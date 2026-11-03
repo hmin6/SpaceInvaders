@@ -19,6 +19,7 @@ The game started as my CSCI 381 Space Invaders assignment, built on my professor
    - [Optional Features](#optional-features)
 6. [Script Overview](#script-overview)
 7. [Technical Notes](#technical-notes)
+8. [Development Notes](#development-notes)
 
 ---
 
@@ -232,7 +233,7 @@ The ship is kept fully on screen using the camera, not hard-coded numbers.
 
 ### Code Issues
 
-A review of the original gameplay scripts. These issues were fixed in C# only; no scenes, prefabs or `.meta` files were changed, and gameplay behaved the same as before. **Line numbers refer to the original scripts.**
+A review of the original gameplay scripts. The four fixed issues below were selected from a longer review of nine issues. They were fixed in C# only; no scenes, prefabs or `.meta` files were changed, and gameplay behaved the same as before. **Line numbers refer to the original scripts.**
 
 #### Fixed: 1. UI text rebuilt every frame
 
@@ -249,7 +250,7 @@ A review of the original gameplay scripts. These issues were fixed in C# only; n
 
 *Later:* the text comes from an Inspector **Format** field, now `"Targets Remaining: {0}"`.
 
-#### Fixed: 5. Movement measured per physics step, not per second
+#### Fixed: 2. Movement measured per physics step, not per second
 
 **Files:** `Dart.cs:23`, `AlienBullet.cs:23`, `AlienFleet.cs:52,56`, `Alien.cs:30`
 
@@ -270,7 +271,7 @@ A review of the original gameplay scripts. These issues were fixed in C# only; n
 
 *Later:* balancing raised the alien bullet speed to 9, and each level now sets its own. The per-alien fire chance was replaced by a fleet-wide fire rate (see [Balancing](#balancing)), also per second.
 
-#### Fixed: 6. `static` tuning values hidden from the Inspector
+#### Fixed: 3. `static` tuning values hidden from the Inspector
 
 **Files:** `Alien.cs:10-12`, `AlienBullet.cs:5-7`, `Dart.cs:5-6`, `Spaceship.cs:9-10`
 
@@ -280,7 +281,7 @@ A review of the original gameplay scripts. These issues were fixed in C# only; n
 
 **Change:** the tuning values are `[SerializeField] private` instance fields, adjustable per prefab in the Inspector, and `lastShot` is `private`. Every tuning value added since follows the same pattern.
 
-#### Fixed: 8. Redundant `GetComponent` and reaching into the fleet's list
+#### Fixed: 4. Redundant `GetComponent` and reaching into the fleet's list
 
 **Files:** `Alien.cs:39`, `AlienFleet.cs:13`
 
@@ -312,7 +313,7 @@ A review of the original gameplay scripts. These issues were fixed in C# only; n
   - *Not fixed:* the fleet is at most 40 aliens, and the `0` start values happen to give correct results.
 - **String-based `Invoke`** (`AlienFleet.cs:84`):
   - *Issue:* `Invoke("startSidewaysMotion", ...)` breaks silently if the method is renamed, and the name isn't PascalCase.
-  - *Not fixed:* it works, and it was left as the professor wrote it.
+  - *Not fixed:* low risk; left unchanged.
 - **Magic numbers:**
   - *Issue:* the grid spacing and start position in `AlienFleet.Start`, and the ±10 off-screen limits in `Dart` and `AlienBullet`.
   - *Partly fixed:* the column and row counts now come from each level.
@@ -539,3 +540,9 @@ On top of the layers, the scripts filter collisions:
 - aliens react only to darts
 - alien bullets call `Hit()` on the ship, destroy darts (surviving if dark), and ignore other alien bullets
 - the Pod and all model parts have no colliders
+
+---
+
+## Development Notes
+
+This project was developed with Claude Code (AI assistance) through my own prompts. I directed the design, story and requirements, did all of the Unity Editor setup, and playtested and verified each change.
