@@ -24,6 +24,7 @@ MonoBehaviour:
   maxFireRate: 4
   aimedShotChance: 0.5
   alienBulletSpeed: 10.5
+  darkBulletChance: 0.35
   briefingSystemLine: 'ALERT: Simulation 03 contains unverified data.'
   briefing: 'This one wasn''t on the schedule. It was added to your queue this morning.
 

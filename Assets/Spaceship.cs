@@ -40,8 +40,41 @@ public class Spaceship : MonoBehaviour
     void Awake()
     {
         LockRigidbodies();
-        renderers = GetComponentsInChildren<Renderer>();
+
+        NierArt art = NierArt.Instance;
+        if (art != null)
+        {
+            BuildModel(art);
+        }
+        else
+        {
+            renderers = GetComponentsInChildren<Renderer>();
+        }
+        // From the visible model, so the screen clamp and lose line match what the player sees
         MeasureExtents();
+    }
+
+    // Replaces the prefab's three cylinders with the arrowhead model, and their capsule colliders
+    // with one convex collider of the same arrowhead shape on the root (the hitbox matches the model)
+    void BuildModel(NierArt art)
+    {
+        NierModels.HideOriginalRenderers(gameObject);
+        foreach (Collider oldCollider in GetComponentsInChildren<Collider>(true))
+        {
+            oldCollider.enabled = false;
+        }
+
+        Transform model = NierModels.BuildShip(art, transform);
+        renderers = model.GetComponentsInChildren<Renderer>(); // only these blink when hit
+
+        MeshCollider hitbox = GetComponent<MeshCollider>();
+        if (hitbox == null)
+        {
+            hitbox = gameObject.AddComponent<MeshCollider>();
+        }
+        hitbox.sharedMesh = NierModels.ShipColliderMesh(art);
+        hitbox.convex = true;
+        hitbox.enabled = true;
     }
 
     // The ship is moved only by this script, so physics must never push or rotate it.

@@ -12,6 +12,8 @@ public static class NierStyle
     public static readonly Color InkDark = new Color32(0x3A, 0x38, 0x30, 0xFF);
     public static readonly Color Accent = new Color32(0xE0, 0x6A, 0x3A, 0xFF);     // enemy bullets and hits
     public static readonly Color Paper = new Color32(0xF4, 0xF1, 0xE6, 0xFF);      // light flash
+    public static readonly Color Hull = new Color32(0xF0, 0xED, 0xE0, 0xFF);       // player ship and darts
+    public static readonly Color Glow = new Color32(0xF2, 0xA2, 0x7A, 0xFF);       // soft halo around orange cores
 
     public const float LetterSpacing = 12f;
 

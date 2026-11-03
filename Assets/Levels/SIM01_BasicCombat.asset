@@ -24,6 +24,7 @@ MonoBehaviour:
   maxFireRate: 3.5
   aimedShotChance: 0.35
   alienBulletSpeed: 9
+  darkBulletChance: 0
   briefingSystemLine: 'Proposal: Unit No. 11S proceed to combat simulation 01.'
   briefing: 'Good morning, 11S. This is Operator 17O.
 

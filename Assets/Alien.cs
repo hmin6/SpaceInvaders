@@ -7,8 +7,12 @@ public class Alien : MonoBehaviour
     public GameObject bulletPrefab;
     public AlienFleet fleet;
 
-    // Formation column, set by AlienFleet so it can find the lowest alien in each column
-    public int Column { get; set; }
+    [Tooltip("Replace this prefab's own meshes with the code-built NieR model. Untick on custom " +
+             "enemy prefabs (LevelData's Alien Prefab Override) that bring their own visuals.")]
+    [SerializeField] private bool useCodeModel = true;
+
+    // Formation column, so AlienFleet can find the lowest alien in each column
+    public int Column { get; private set; }
 
     private float bottomOffset; // distance from this alien's position down to the bottom of its mesh
     private bool dead = false;
@@ -32,15 +36,30 @@ public class Alien : MonoBehaviour
         }
     }
 
+    // Called by AlienFleet right after spawning. Each row gets a different shape; anomaly
+    // levels get corrupted, glitching versions.
+    public void Initialize(AlienFleet owner, int column, int row, bool anomaly)
+    {
+        fleet = owner;
+        Column = column;
+
+        NierArt art = NierArt.Instance;
+        if (useCodeModel && art != null)
+        {
+            NierModels.HideOriginalRenderers(gameObject);
+            NierModels.BuildAlien(art, transform, row % 3, anomaly);
+        }
+    }
+
     // Called by AlienFleet, which decides when and which alien fires.
-    // bulletSpeed <= 0 keeps the AlienBullet prefab's own speed.
-    public void Fire(float bulletSpeed)
+    // bulletSpeed <= 0 keeps the AlienBullet prefab's own speed. Dark shots can't be shot down.
+    public void Fire(float bulletSpeed, bool dark)
     {
         GameObject bullet = Instantiate<GameObject>(bulletPrefab);
         bullet.transform.position = transform.position;
-        if (bulletSpeed > 0 && bullet.TryGetComponent(out AlienBullet alienBullet))
+        if (bullet.TryGetComponent(out AlienBullet alienBullet))
         {
-            alienBullet.SetSpeed(bulletSpeed);
+            alienBullet.Configure(bulletSpeed, dark);
         }
     }
 

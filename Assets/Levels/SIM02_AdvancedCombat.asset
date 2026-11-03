@@ -24,6 +24,7 @@ MonoBehaviour:
   maxFireRate: 3.9
   aimedShotChance: 0.45
   alienBulletSpeed: 10
+  darkBulletChance: 0.2
   briefingSystemLine: 'ALERT: Enemy aggression parameters increased.'
   briefing: 'Simulation 02 raises enemy speed and rate of fire.
 

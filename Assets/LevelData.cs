@@ -33,6 +33,9 @@ public class LevelData : ScriptableObject
     [SerializeField] private float aimedShotChance = .35f;
     [Tooltip("Alien bullet speed in units/sec")]
     [SerializeField] private float alienBulletSpeed = 9f;
+    [Tooltip("Share of shots that are dark (indestructible: must be dodged) instead of orange (darts destroy them)")]
+    [Range(0, 1)]
+    [SerializeField] private float darkBulletChance = 0f;
 
     [Header("Briefing")]
     [Tooltip("Short formal system line shown above the Operator's message")]
@@ -65,6 +68,7 @@ public class LevelData : ScriptableObject
     public float MaxFireRate => maxFireRate;
     public float AimedShotChance => aimedShotChance;
     public float AlienBulletSpeed => alienBulletSpeed;
+    public float DarkBulletChance => darkBulletChance;
     public string BriefingSystemLine => briefingSystemLine;
     public string Briefing => briefing;
     public string DebriefSystemLine => debriefSystemLine;
@@ -81,8 +85,9 @@ public class LevelData : ScriptableObject
         float baseFireRate, float maxFireRate, float aimedShotChance, float alienBulletSpeed,
         string briefingSystemLine, string briefing, string debriefSystemLine, string debrief,
         string failureTitle = "", string failureSystemLine = "", string failureMessage = "",
-        string failureMenuLabel = "")
+        string failureMenuLabel = "", float darkBulletChance = 0f)
     {
+        this.darkBulletChance = darkBulletChance;
         this.failureTitle = failureTitle;
         this.failureSystemLine = failureSystemLine;
         this.failureMessage = failureMessage;

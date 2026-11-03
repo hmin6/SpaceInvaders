@@ -39,6 +39,7 @@ public static class LevelDataDefaults
             columns: 10, rows: 3,
             baseSpeed: 5f, maxSpeedMultiplier: 5f, speedUpExponent: 1.5f,
             baseFireRate: 1.5f, maxFireRate: 3.5f, aimedShotChance: .35f, alienBulletSpeed: 9f,
+            darkBulletChance: 0f,
             briefingSystemLine: "Proposal: Unit No. 11S proceed to combat simulation 01.",
             briefing:
                 "Good morning, 11S. This is Operator 17O.\n" +
@@ -57,6 +58,7 @@ public static class LevelDataDefaults
             columns: 10, rows: 4,
             baseSpeed: 6f, maxSpeedMultiplier: 4.5f, speedUpExponent: 1.5f,
             baseFireRate: 1.9f, maxFireRate: 3.9f, aimedShotChance: .45f, alienBulletSpeed: 10f,
+            darkBulletChance: .2f,
             briefingSystemLine: "ALERT: Enemy aggression parameters increased.",
             briefing:
                 "Simulation 02 raises enemy speed and rate of fire.\n" +
@@ -74,6 +76,7 @@ public static class LevelDataDefaults
             columns: 10, rows: 4,
             baseSpeed: 7f, maxSpeedMultiplier: 4.5f, speedUpExponent: 1.4f,
             baseFireRate: 2.1f, maxFireRate: 4.0f, aimedShotChance: .5f, alienBulletSpeed: 10.5f,
+            darkBulletChance: .35f,
             briefingSystemLine: "ALERT: Simulation 03 contains unverified data.",
             briefing:
                 "This one wasn't on the schedule. It was added to your queue this morning.\n" +

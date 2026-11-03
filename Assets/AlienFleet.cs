@@ -34,6 +34,9 @@ public class AlienFleet : MonoBehaviour
     [SerializeField] private float aimedShotChance = 0.35f;
     [Tooltip("Alien bullet speed in units/sec. 0 = use the AlienBullet prefab's speed.")]
     [SerializeField] private float alienBulletSpeed = 0f;
+    [Tooltip("Share of shots that are dark (indestructible) instead of orange (can be shot down)")]
+    [Range(0, 1)]
+    [SerializeField] private float darkBulletChance = 0f;
 
     [Header("Lose Line")]
     [Tooltip("How far above the top of the spaceship the bottom of the lowest alien can reach before the game is lost")]
@@ -59,10 +62,12 @@ public class AlienFleet : MonoBehaviour
     {
         // The settings above are used as-is when GameManager has no levels
         GameObject prefab = alienPrefab;
+        bool anomaly = false;
         if (GameManager.Instance != null && GameManager.Instance.CurrentLevel != null)
         {
             LevelData level = GameManager.Instance.CurrentLevel;
             ApplyLevel(level);
+            anomaly = level.IsAnomaly;
             if (level.AlienPrefabOverride != null)
             {
                 prefab = level.AlienPrefabOverride;
@@ -76,8 +81,7 @@ public class AlienFleet : MonoBehaviour
                 GameObject alienGO = Instantiate<GameObject>(prefab);
                 alienGO.transform.position = new Vector3(2 * i - 12, 10 - 2 * j, 0);
                 Alien alien = alienGO.GetComponent<Alien>();
-                alien.fleet = this;
-                alien.Column = i;
+                alien.Initialize(this, i, j, anomaly);
                 aliens.Add(alien);
             }
         }
@@ -150,6 +154,7 @@ public class AlienFleet : MonoBehaviour
         maxFireRate = level.MaxFireRate;
         aimedShotChance = level.AimedShotChance;
         alienBulletSpeed = level.AlienBulletSpeed;
+        darkBulletChance = level.DarkBulletChance;
     }
 
     // Like classic Space Invaders, the fleet gets faster and fires more as aliens are destroyed.
@@ -257,7 +262,7 @@ public class AlienFleet : MonoBehaviour
         {
             shooter = shooters[Random.Range(0, shooters.Count)];
         }
-        shooter.Fire(alienBulletSpeed);
+        shooter.Fire(alienBulletSpeed, Random.value < darkBulletChance);
     }
 
     // Fills results with every alien within halfWidth of x and above minY (for the Pod's laser).

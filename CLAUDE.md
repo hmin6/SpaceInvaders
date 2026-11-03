@@ -46,6 +46,12 @@ All gameplay scripts sit flat in `Assets/` next to their prefabs and materials. 
   - **HUD:** `PodMeter` (on the Canvas) builds the meter and the "Proposal" message, and makes itself the Canvas's first child so the screens draw over it.
 - **Failure text:** per-level overrides live in `LevelData` (`Failure*` fields). Empty fields fall back to the NierScreens defaults. Anomaly levels glitch the failure title.
 - **Updating level assets:** **Tools → YoRHa → Reset Default Levels (Overwrite)** rewrites the existing assets in place, keeping their GUIDs and references.
+- **Models:** the ship, aliens, alien bullets and darts are drawn by code-built models (`NierModels`, using cubes plus `NierShapes` procedural prisms and octahedra). The prefabs' own renderers are disabled at runtime.
+  - **NierArt:** a scene singleton with `[DefaultExecutionOrder(-200)]` that provides one unlit material per colour and caches meshes. Without it, the original visuals stay.
+  - **Scale:** models sit under a "Model" root that cancels the owner's scale, so they're authored in world units. Anything that rotates must be an inner child of that root, because rotating the root itself under a non-uniformly scaled prefab shears the model.
+  - **Ship:** the original capsule colliders are disabled, and the root MeshCollider gets a convex arrowhead mesh. Extents for the clamp and lose line come from the model's renderers.
+  - **Aliens:** the shape depends on row % 3. `AlienVisual` handles the bob and the anomaly glitch, and moves only the model, never the alien.
+  - **Shots:** each level sets a `DarkBulletChance`. Dark shots destroy darts and survive, orange shots die with the dart, and alien shots pass through each other.
 - **Story:** a NieR: Automata prequel with original characters only: the player is YoRHa No. 11 Type S, guided by Operator 17O. Don't use canon characters. Dialogue lives in the LevelData assets and the NierScreens Inspector fields.
 - **NieR visual layer**, all built at runtime from code, with no prefab or scene authoring:
   - `NierStyle` (static palette and UI-building helpers)
