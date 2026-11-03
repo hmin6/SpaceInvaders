@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.InputSystem;
 
 public class AlienFleet : MonoBehaviour
 {
@@ -10,62 +9,62 @@ public class AlienFleet : MonoBehaviour
 
     public AlienCounter alienCounter;
 
-    public List<GameObject> aliens = new List<GameObject> { };
+    private List<Alien> aliens = new List<Alien>();
 
-    float speed = .1f;
+    float speed = 5f; // units per second (was .1 per physics step at 50 steps/sec)
     float leftBound = -16;
     float rightBound = 16;
-    float lowerBound = 4.8f;
     float downTime = .1f;
     bool movingDown = false;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         for (int i = 0; i < 10; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                GameObject alien = Instantiate<GameObject>(alienPrefab);
-                alien.transform.position = new Vector3(2 * i - 12, 10 - 2 * j, 0);
+                GameObject alienGO = Instantiate<GameObject>(alienPrefab);
+                alienGO.transform.position = new Vector3(2 * i - 12, 10 - 2 * j, 0);
+                Alien alien = alienGO.GetComponent<Alien>();
+                alien.fleet = this;
                 aliens.Add(alien);
-                alien.GetComponent<Alien>().fleet = this;
             }
         }
 
+        alienCounter.SetRemaining(aliens.Count);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void RemoveAlien(Alien alien)
     {
-        alienCounter.score = aliens.Count;
+        // Remove returns false if this alien was already removed (e.g. hit twice in one frame)
+        if (aliens.Remove(alien))
+        {
+            alienCounter.SetRemaining(aliens.Count);
+        }
     }
 
     void FixedUpdate()
     {
+        float step = speed * Time.fixedDeltaTime;
+
         //move all aliens
-        foreach (GameObject alien in aliens)
+        foreach (Alien alien in aliens)
         {
             Vector3 position = alien.transform.position;
             if (!movingDown)
             {
-                position.x += speed;
+                position.x += step;
             }
             else
             {
-                position.y += -Mathf.Abs(speed);
-                /*if (position.y <= lowerBound)
-                {
-                    movingDown = false;
-                    lowerBound = position.y - 1;
-                }*/
+                position.y += -Mathf.Abs(step);
             }
             alien.transform.position = position;
         }
 
         //change alien direction
         float left = 0, right = 0;
-        foreach (GameObject alien in aliens)
+        foreach (Alien alien in aliens)
         {
             Vector3 position = alien.transform.position;
             if (position.x > right)

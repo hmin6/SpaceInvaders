@@ -6,17 +6,11 @@ public class Spaceship : MonoBehaviour
     [Header("Inscribed")]
     public GameObject dartPrefab;
 
-    public static float shotCooldown = .05f;
-    public float lastShot = 0;
+    [SerializeField] private float shotCooldown = .05f;
     public float speed = 10f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    private float lastShot = 0;
 
-    // Update is called once per frame
     void Update()
     {
         if (Keyboard.current.rightArrowKey.isPressed)
@@ -39,7 +33,4 @@ public class Spaceship : MonoBehaviour
             lastShot = Time.time;
         }
     }
-
 }
-
-

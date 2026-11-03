@@ -3,29 +3,18 @@ using UnityEngine;
 public class Dart : MonoBehaviour
 {
     [Header("Inscribed")]
-    static float speed = .3f;
-    
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    // Units per second (was .3 per physics step at 50 steps/sec)
+    [SerializeField] private float speed = 15f;
 
     void FixedUpdate()
     {
         Vector3 position = transform.position;
-        position.y += speed;
+        position.y += speed * Time.fixedDeltaTime;
         transform.position = position;
-        if(position.y > 10)
+        if (position.y > 10)
         {
             Destroy(gameObject);
         }
     }
-
 }
